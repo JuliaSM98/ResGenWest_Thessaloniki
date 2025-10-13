@@ -6,6 +6,7 @@ end
 
 to build-id-table-from-dataset
   set id-table table:make
+  set feature-by-id table:make
   let feats gis:feature-list-of blocks-ds
   let areas     [10 20 30 40 50]
   let celltypes ["ground" "roof" "roof" "roof" "ground"]
@@ -21,6 +22,7 @@ to build-id-table-from-dataset
       let cst (ifelse-value (idx < length celltypes)  [ item idx celltypes ] [ "unknown" ])
 
       table:put id-table the-id (list a cst)
+      table:put feature-by-id the-id f
       set idx idx + 1
   ]
 end
@@ -41,4 +43,3 @@ to show-id-list
       print (word k " , " a " m^2 , " cst)
   ]
 end
-

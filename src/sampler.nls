@@ -12,6 +12,7 @@ to init-portfolio-sampler
   set max-portfolios product-of counts
   set visited-portfolios table:make
   set initialized? true
+  set combo-index 0
   print (word "Sampler ready. Max portfolios (upper bound): " max-portfolios)
 end
 
@@ -67,3 +68,63 @@ to-report compute-portfolio-totals [portfolio]
   report (list total-cost total-co2)
 end
 
+;; -------- Deterministic enumeration --------
+
+to-report portfolio-from-index [idx]
+  ;; Mixed-radix enumeration over blocks-ordered
+  let result []
+  let i idx
+  foreach blocks-ordered [ bid ->
+    let rec   table:get id-table bid
+    let ctype item 1 rec
+    let opts  table:get options-by-type ctype
+    let n     length opts
+    let digit i mod n
+    set i floor (i / n)
+    let choice item digit opts
+    set result lput (list bid choice) result
+  ]
+  report result
+end
+
+to annotate-portfolio [portfolio]
+  ;; Clear previous markers and create one label per polygon
+  ask markers [ die ]
+  foreach portfolio [ p ->
+    let bid  item 0 p
+    let opt  item 1 p
+    let lbl  item 3 opt  ;; option record [mix_id res nbs label]
+    let f table:get feature-by-id bid
+    let env gis:envelope-of f  ;; [minx miny maxx maxy]
+    let cx ( (item 0 env + item 2 env) / 2 )
+    let cy ( (item 1 env + item 3 env) / 2 )
+    create-markers 1 [
+      set xcor cx
+      set ycor cy
+      set size 0
+      set color white
+      set label lbl
+      set label-color black
+    ]
+  ]
+end
+
+to render-current-table [portfolio]
+  ;; Print a simple table of selections and areas to the output
+  clear-output
+  output-print "ID, Area_m2, Cell_Type, Mix_ID, RES%, NBS%, Label"
+  foreach portfolio [ p ->
+    let bid  item 0 p
+    let opt  item 1 p                 ;; [mix_id res nbs label]
+    let mix  item 0 opt
+    let res  item 1 opt
+    let nbs  item 2 opt
+    let lbl  item 3 opt
+    let rec  table:get id-table bid   ;; [area cell_type]
+    let area item 0 rec
+    let ctyp item 1 rec
+    output-print (word bid ", " area ", " ctyp ", " mix ", " (precision (res * 100) 2) "% , " (precision (nbs * 100) 2) "% , " lbl)
+  ]
+  output-print ""
+  output-print (word "Tick: " ticks "  Cost: " last-total-cost "  CO2: " last-total-co2)
+end

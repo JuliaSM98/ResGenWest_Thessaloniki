@@ -17,30 +17,39 @@ to setup
   ;; NEW: build catalogs and sampler state
   build-catalogs-from-csvs
   init-portfolio-sampler
+  reset-ticks
 end
 
 ;; Forever button calls this
 to go
-  if not initialized? [ init-portfolio-sampler ]  ;; safety
-  if (table:length visited-portfolios) >= max-portfolios [
-    stop
-  ]
+  if not initialized? [ init-portfolio-sampler ]
+  if combo-index >= max-portfolios [ stop ]
 
-  ;; Try a few times to draw a new (unseen) portfolio
-  let tries 0
-  let key ""
-  let tot []
-  while [tries < 50] [
-    let sampled sample-portfolio
-    set key portfolio-key sampled
-    if not table:has-key? visited-portfolios key [
-      set tot compute-portfolio-totals sampled
-      table:put visited-portfolios key tot
-        set-current-plot "Cost vs CO2"
-        plotxy (item 0 tot) (item 1 tot)
-      stop
-    ]
-    set tries tries + 1
-  ]
-  ;; If we reach here, it got hard to find new ones randomly — you can stop or keep trying
+  let portfolio portfolio-from-index combo-index
+  let tot compute-portfolio-totals portfolio
+  set last-total-cost item 0 tot
+  set last-total-co2  item 1 tot
+
+  ;; annotate selections on patches
+  annotate-portfolio portfolio
+  ;; print current selection table (appears if an Output widget is present)
+  render-current-table portfolio
+
+  ;; plot single point
+  let iter (combo-index + 1)
+  ;; Cost plot
+  set-current-plot "Cost"
+  if not plot-pen-exists? "points" [ create-temporary-plot-pen "points" ]
+  set-current-plot-pen "points"
+  set-plot-pen-mode 2  ;; points
+  plotxy iter (item 0 tot)
+  ;; CO2 plot
+  set-current-plot "CO2"
+  if not plot-pen-exists? "points" [ create-temporary-plot-pen "points" ]
+  set-current-plot-pen "points"
+  set-plot-pen-mode 2  ;; points
+  plotxy iter (item 1 tot)
+
+  set combo-index combo-index + 1
+  tick
 end

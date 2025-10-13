@@ -2,6 +2,8 @@ __includes [ "src/utils.nls" "src/csv_io.nls" "src/gis.nls" "src/catalogs.nls" "
 
 extensions [gis table csv]
 
+breed [ markers marker ]
+
 globals [
   ;; GIS
   blocks-ds               ;; loaded shapefile dataset
@@ -17,16 +19,20 @@ globals [
   options-by-type         ;; table: "roof"/"ground" -> list of option records [mix_id res nbs label]
   intensities             ;; table: action_id -> [cost_per_m2 co2_per_m2]
   blocks-ordered          ;; stable list of block IDs (order we sample)
-  visited-portfolios      ;; table: key-string -> [total-cost total-co2]
+  visited-portfolios      ;; table: key-string -> [total-cost total-co2]  ;; (not used by enumerator)
   max-portfolios          ;; integer = product of option counts by block
   initialized?            ;; boolean, true after init-portfolio-sampler
+  feature-by-id           ;; table: id -> GIS feature (for labeling)
+  combo-index             ;; integer: current combination index (0..max-portfolios-1)
+  last-total-cost         ;; number: total cost of last iteration
+  last-total-co2          ;; number: total CO2 of last iteration
 ]
 @#$#@#$#@
 GRAPHICS-WINDOW
 527
 19
-1154
-647
+1028
+521
 -1
 -1
 14.94
@@ -87,8 +93,8 @@ PLOT
 44
 137
 436
-370
-Cost vs CO2
+373
+Cost
 NIL
 NIL
 0.0
@@ -99,7 +105,25 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot count turtles"
+"default" 1.0 2 -16777216 true "" ""
+
+PLOT
+1065
+132
+1457
+365
+CO2
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 2 -16777216 true "" ""
 
 @#$#@#$#@
 ## WHAT IS IT?
