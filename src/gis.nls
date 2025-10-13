@@ -7,9 +7,11 @@ end
 to build-id-table-from-dataset
   set id-table table:make
   set feature-by-id table:make
+  set colors-by-id table:make
   let feats gis:feature-list-of blocks-ds
   let areas     [10 20 30 40 50]
   let celltypes ["ground" "roof" "roof" "roof" "ground"]
+  let palette [ red green blue orange violet cyan brown magenta ]
 
   let idx 0
   foreach feats [
@@ -23,14 +25,21 @@ to build-id-table-from-dataset
 
       table:put id-table the-id (list a cst)
       table:put feature-by-id the-id f
+      let col item (idx mod length palette) palette
+      table:put colors-by-id the-id col
       set idx idx + 1
   ]
 end
 
 to fit-and-draw-dataset
   gis:set-world-envelope (gis:envelope-of blocks-ds)
-  gis:set-drawing-color blue
-  gis:draw blocks-ds 1.0
+  let ids sort table:keys feature-by-id
+  foreach ids [ bid ->
+    let f   table:get feature-by-id bid
+    let col table:get colors-by-id bid
+    gis:set-drawing-color col
+    gis:draw f 1.0
+  ]
 end
 
 to show-id-list

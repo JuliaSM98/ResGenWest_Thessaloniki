@@ -88,23 +88,22 @@ to-report portfolio-from-index [idx]
 end
 
 to annotate-portfolio [portfolio]
-  ;; Clear previous markers and create one label per polygon
-  ask markers [ die ]
+  ;; Clear existing patch labels and set each polygon's label at its envelope center patch
+  ask patches [ set plabel "" ]
   foreach portfolio [ p ->
     let bid  item 0 p
     let opt  item 1 p
-    let lbl  item 3 opt  ;; option record [mix_id res nbs label]
+    let lblt item 3 opt  ;; option record [mix_id res nbs label]
     let f table:get feature-by-id bid
     let env gis:envelope-of f  ;; [minx miny maxx maxy]
     let cx ( (item 0 env + item 2 env) / 2 )
     let cy ( (item 1 env + item 3 env) / 2 )
-    create-markers 1 [
-      set xcor cx
-      set ycor cy
-      set size 0
-      set color white
-      set label lbl
-      set label-color black
+    let col (ifelse-value (table:has-key? colors-by-id bid)
+                [ table:get colors-by-id bid ]
+                [ black ])
+    ask patch cx cy [
+      set plabel (word "{" bid "} - " lblt)
+      set plabel-color col
     ]
   ]
 end
