@@ -32,8 +32,10 @@ to go
 
   ;; annotate selections on patches
   annotate-portfolio portfolio
-  ;; print current selection table (appears if an Output widget is present)
-  render-current-table portfolio
+  ;; print current selection table (appears if an Output widget is present) when enabled via switch
+  if print-tables [
+    render-current-table portfolio
+  ]
 
   ;; plot single point
   let iter (combo-index + 1)

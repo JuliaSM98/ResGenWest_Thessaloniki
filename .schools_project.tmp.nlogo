@@ -30,13 +30,13 @@ globals [
 ]
 @#$#@#$#@
 GRAPHICS-WINDOW
-527
+572
 19
-1028
-521
+982
+430
 -1
 -1
-14.94
+12.2
 1
 10
 1
@@ -133,7 +133,7 @@ SWITCH
 102
 print-tables
 print-tables
-1
+0
 1
 -1000
 

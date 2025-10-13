@@ -110,7 +110,7 @@ end
 
 to render-current-table [portfolio]
   ;; Print a simple table of selections and areas to the output
-  clear-output
+  output-print "-----------"
   output-print "ID, Area_m2, Cell_Type, Mix_ID, RES%, NBS%, Label"
   foreach portfolio [ p ->
     let bid  item 0 p
