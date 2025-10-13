@@ -1,0 +1,71 @@
+;; CSV loading and preview helpers
+
+to load-options-csv [path]
+  set options-header []
+  set options-rows   []
+  file-close-all
+  if not file-exists? path [ print (word "WARNING: file not found: " path) stop ]
+  file-open path
+  if file-at-end? [ print (word "WARNING: file is empty: " path) file-close stop ]
+
+  set options-header csv:from-row file-read-line
+  set options-header map [ h -> clean-token (word h) ] options-header
+
+  while [ not file-at-end? ] [
+    let line file-read-line
+    if length line > 0 [
+      set options-rows lput (csv:from-row line) options-rows
+    ]
+  ]
+  file-close
+end
+
+to load-assumptions-csv [path]
+  set assumptions-header []
+  set assumptions-rows   []
+  file-close-all
+  if not file-exists? path [
+    print (word "WARNING: file not found: " path)
+    stop
+  ]
+  file-open path
+  if file-at-end? [
+    print (word "WARNING: file is empty: " path)
+    file-close
+    stop
+  ]
+  set assumptions-header csv:from-row file-read-line
+  set assumptions-header map [ h -> clean-token (word h) ] assumptions-header
+
+  while [ not file-at-end? ] [
+    let line file-read-line
+    if length line > 0 [
+      set assumptions-rows lput (csv:from-row line) assumptions-rows
+    ]
+  ]
+  file-close
+end
+
+to-report clean-token [s]
+  if (length s > 0) and (substring s 0 1 = "﻿") [
+    set s substring s 1 length s
+  ]
+  while [length s > 0 and member? (substring s 0 1) [" " "\t" "\r" "\n"]] [
+    set s substring s 1 length s
+  ]
+  while [length s > 0 and member? (substring s (length s - 1) length s) [" " "\t" "\r" "\n"]] [
+    set s substring s 0 (length s - 1)
+  ]
+  report s
+end
+
+to preview-csvs
+  print "=== options.csv ==="
+  print (word "Header: " options-header)
+  print (word " rows: " options-rows)
+
+  print "=== cost_co2_assumptions.csv ==="
+  print (word "Header: " assumptions-header)
+  print (word " rows: " assumptions-rows)
+end
+

@@ -1,0 +1,44 @@
+;; GIS helpers: dataset loading, id table, drawing
+
+to load-shapefile [path]
+  set blocks-ds gis:load-dataset path
+end
+
+to build-id-table-from-dataset
+  set id-table table:make
+  let feats gis:feature-list-of blocks-ds
+  let areas     [10 20 30 40 50]
+  let celltypes ["ground" "roof" "roof" "roof" "ground"]
+
+  let idx 0
+  foreach feats [
+    f ->
+      let the-id gis:property-value f "Id"
+      if the-id = nobody [ set the-id gis:property-value f "ID" ]
+      if the-id = nobody or the-id = "" [ set the-id (word "SCH_" idx) ]
+
+      let a   (ifelse-value (idx < length areas)      [ item idx areas ]     [ 0 ])
+      let cst (ifelse-value (idx < length celltypes)  [ item idx celltypes ] [ "unknown" ])
+
+      table:put id-table the-id (list a cst)
+      set idx idx + 1
+  ]
+end
+
+to fit-and-draw-dataset
+  gis:set-world-envelope (gis:envelope-of blocks-ds)
+  gis:set-drawing-color blue
+  gis:draw blocks-ds 1.0
+end
+
+to show-id-list
+  print "=== ID / AREA / CELL_TYPE ==="
+  foreach sort table:keys id-table [
+    k ->
+      let rec table:get id-table k
+      let a item 0 rec
+      let cst item 1 rec
+      print (word k " , " a " m^2 , " cst)
+  ]
+end
+

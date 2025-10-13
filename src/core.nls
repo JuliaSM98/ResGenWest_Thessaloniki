@@ -1,0 +1,46 @@
+;; Core entrypoints: setup and go
+
+to setup
+  clear-all
+  clear-drawing
+  ask patches [ set pcolor white ]
+
+  load-shapefile "data/shapefiles/6.shp"
+  build-id-table-from-dataset
+  fit-and-draw-dataset
+  show-id-list
+
+  load-options-csv "data/csv/options.csv"
+  load-assumptions-csv "data/csv/cost_co2_assumptions.csv"
+  preview-csvs
+
+  ;; NEW: build catalogs and sampler state
+  build-catalogs-from-csvs
+  init-portfolio-sampler
+end
+
+;; Forever button calls this
+to go
+  if not initialized? [ init-portfolio-sampler ]  ;; safety
+  if (table:length visited-portfolios) >= max-portfolios [
+    stop
+  ]
+
+  ;; Try a few times to draw a new (unseen) portfolio
+  let tries 0
+  let key ""
+  let tot []
+  while [tries < 50] [
+    let sampled sample-portfolio
+    set key portfolio-key sampled
+    if not table:has-key? visited-portfolios key [
+      set tot compute-portfolio-totals sampled
+      table:put visited-portfolios key tot
+        set-current-plot "Cost vs CO2"
+        plotxy (item 0 tot) (item 1 tot)
+      stop
+    ]
+    set tries tries + 1
+  ]
+  ;; If we reach here, it got hard to find new ones randomly — you can stop or keep trying
+end

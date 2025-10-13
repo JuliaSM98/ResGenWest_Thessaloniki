@@ -1,0 +1,42 @@
+;; Build option catalogs and intensity tables
+
+to build-catalogs-from-csvs
+  set options-by-type table:make
+  table:put options-by-type "roof"   []
+  table:put options-by-type "ground" []
+
+  let c-mix_id  col-index options-header "mix_id"
+  let c-type    col-index options-header "cell_type"
+  let c-res     col-index options-header "res_pct"
+  let c-nbs     col-index options-header "nbs_pct"
+  let c-label   col-index options-header "label"
+  if (c-mix_id = -1 or c-type = -1 or c-res = -1 or c-nbs = -1 or c-label = -1) [ stop ]
+
+  foreach options-rows [ row ->
+    let typ  item c-type  row
+    let rec  (list (item c-mix_id row)
+                   (normalize-pct item c-res row)
+                   (normalize-pct item c-nbs row)
+                   (item c-label  row))
+    let lst table:get options-by-type typ
+    table:put options-by-type typ (lput rec lst)
+  ]
+
+  set intensities table:make
+  let a-action  col-index assumptions-header "action_id"
+  let a-cost    col-index assumptions-header "cost_per_m2"
+  let a-co2     col-index assumptions-header "co2_per_m2"
+  if (a-action = -1 or a-cost = -1 or a-co2 = -1) [ stop ]
+
+  foreach assumptions-rows [ row ->
+    let act (word item a-action row)
+    table:put intensities act (list (as-number item a-cost row)
+                                    (as-number item a-co2 row))
+  ]
+end
+
+to-report intensity-of [action]
+  if table:has-key? intensities action [ report table:get intensities action ]
+  user-message (word "No intensity found for action=" action)
+  report [0 0]
+end

@@ -1,0 +1,69 @@
+;; Portfolio sampler and metrics
+
+to init-portfolio-sampler
+  set blocks-ordered sort table:keys id-table
+  let counts []
+  foreach blocks-ordered [ bid ->
+    let rec table:get id-table bid
+    let ctype item 1 rec
+    let opts table:get options-by-type ctype
+    set counts lput (length opts) counts
+  ]
+  set max-portfolios product-of counts
+  set visited-portfolios table:make
+  set initialized? true
+  print (word "Sampler ready. Max portfolios (upper bound): " max-portfolios)
+end
+
+to-report sample-portfolio
+  let result []
+  foreach blocks-ordered [ bid ->
+    let rec table:get id-table bid
+    let ctype item 1 rec
+    let opts table:get options-by-type ctype
+    let choice one-of opts
+    set result lput (list bid choice) result
+  ]
+  report result
+end
+
+to-report portfolio-key [portfolio]
+  let parts []
+  foreach portfolio [ p ->
+    let bid   item 0 p
+    let mixid item 0 (item 1 p)
+    set parts lput (word bid ":" mixid) parts
+  ]
+  set parts sort parts
+  report join-with parts "|"
+end
+
+to-report compute-portfolio-totals [portfolio]
+  let total-cost 0
+  let total-co2  0
+  foreach portfolio [ p ->
+    let bid item 0 p
+    let opt item 1 p
+    let res item 1 opt
+    let nbs item 2 opt
+
+    let rec table:get id-table bid
+    let area item 0 rec
+
+    let res_area (area * res)
+    let nbs_area (area * nbs)
+
+    let resI intensity-of "RES"
+    let nbsI intensity-of "NBS"
+
+    let res_cost  item 0 resI
+    let res_co2   item 1 resI
+    let nbs_cost  item 0 nbsI
+    let nbs_co2   item 1 nbsI
+
+    set total-cost total-cost + (res_area * res_cost) + (nbs_area * nbs_cost)
+    set total-co2  total-co2  + (res_area * res_co2)  + (nbs_area * nbs_co2)
+  ]
+  report (list total-cost total-co2)
+end
+

@@ -1,0 +1,36 @@
+;; Utilities shared across modules
+
+to-report as-number [x]
+  if is-number? x [ report x ]
+  report read-from-string (word x)
+end
+
+to-report col-index [header name]
+  let i position name header
+  if i = false [
+    user-message (word "Column "name" not found in header: "header)
+    report -1
+  ]
+  report i
+end
+
+to-report normalize-pct [x]
+  let v as-number x
+  if v > 1 [ report v / 100 ]
+  report v
+end
+
+to-report product-of [xs]
+  if empty? xs [ report 0 ]
+  report reduce [ [a b] -> a * b ] (fput 1 xs)
+end
+
+to-report join-with [lst sep]
+  if empty? lst [ report "" ]
+  let acc first lst
+  foreach but-first lst [ s ->
+    set acc (word acc sep s)
+  ]
+  report acc
+end
+
