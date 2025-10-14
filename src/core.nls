@@ -5,7 +5,8 @@ to setup
   clear-drawing
   ask patches [ set pcolor white ]
 
-  load-shapefile "data/shapefiles/6.shp"
+  ;; Updated shapefile path (aggregates areas per block and cell type)
+  load-shapefile "data/shapefiles/Schools_B_R_U.shp"
   build-id-table-from-dataset
   fit-and-draw-dataset
   show-id-list

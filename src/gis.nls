@@ -5,33 +5,72 @@ to load-shapefile [path]
 end
 
 to build-id-table-from-dataset
+  ;; Build per-block, per-cell-type areas by aggregating multiple geometries.
+  ;; Block ID format: "{Id}.{B_Number}". We create separate entries per cell type
+  ;; with keys "{Id}.{B_Number}:roof" and "{Id}.{B_Number}:ground".
   set id-table table:make
   set feature-by-id table:make
   set colors-by-id table:make
+
+  let areas-by-key table:make     ;; key -> total area
   let feats gis:feature-list-of blocks-ds
-  let areas     [10 20 30 40 50]
-  let celltypes ["ground" "roof" "roof" "roof" "ground"]
-  let palette [ red green blue orange violet cyan brown magenta ]
-
+  let palette [ red green blue orange violet cyan brown magenta yellow lime pink turquoise ]
   let idx 0
-  foreach feats [
-    f ->
-      let the-id gis:property-value f "Id"
-      if the-id = nobody [ set the-id gis:property-value f "ID" ]
-      if the-id = nobody or the-id = "" [ set the-id (word "SCH_" idx) ]
 
-      let a   (ifelse-value (idx < length areas)      [ item idx areas ]     [ 0 ])
-      let cst (ifelse-value (idx < length celltypes)  [ item idx celltypes ] [ "unknown" ])
+  foreach feats [ f ->
+    ;; Read identifiers
+    let pid gis:property-value f "Id"
+    if pid = nobody [ set pid gis:property-value f "ID" ]
+    let bno gis:property-value f "B_Number"
 
-      table:put id-table the-id (list a cst)
-      table:put feature-by-id the-id f
-      let col item (idx mod length palette) palette
-      table:put colors-by-id the-id col
-      set idx idx + 1
+    ;; Coerce to strings
+    let pidS (word pid)
+    let bnoS (word bno)
+    if (pidS = "" or pid = nobody) [ set pidS "UNK" ]
+    if (bnoS = "" or bno = nobody) [ set bnoS "0" ]
+    let base (word pidS "." bnoS)
+
+    ;; Read areas (may be empty); normalize to numbers
+    let aR gis:property-value f "Area_R_m2"
+    let aU gis:property-value f "Area_U_m2"
+    let roofA (ifelse-value (aR = nobody or (word aR) = "") [ 0 ] [ as-number aR ])
+    let groundA (ifelse-value (aU = nobody or (word aU) = "") [ 0 ] [ as-number aU ])
+
+    ;; Accumulate per (block,type)
+    if roofA > 0 [
+      let key (word base ":roof")
+      let prev (ifelse-value (table:has-key? areas-by-key key) [ table:get areas-by-key key ] [ 0 ])
+      table:put areas-by-key key (prev + roofA)
+      if not table:has-key? feature-by-id key [
+        table:put feature-by-id key f
+        let col item (idx mod length palette) palette
+        table:put colors-by-id key col
+        set idx idx + 1
+      ]
+    ]
+    if groundA > 0 [
+      let key (word base ":ground")
+      let prev (ifelse-value (table:has-key? areas-by-key key) [ table:get areas-by-key key ] [ 0 ])
+      table:put areas-by-key key (prev + groundA)
+      if not table:has-key? feature-by-id key [
+        table:put feature-by-id key f
+        let col item (idx mod length palette) palette
+        table:put colors-by-id key col
+        set idx idx + 1
+      ]
+    ]
+  ]
+
+  ;; Populate id-table with [area cell_type] for each key
+  foreach sort table:keys areas-by-key [ k ->
+    let a table:get areas-by-key k
+    let cst (ifelse-value (member? ":roof" (sentence k)) [ "roof" ] [ "ground" ])
+    table:put id-table k (list a cst)
   ]
 end
 
 to fit-and-draw-dataset
+  ;; Fit view and draw the dataset. We draw a representative feature per key in color.
   gis:set-world-envelope (gis:envelope-of blocks-ds)
   let ids sort table:keys feature-by-id
   foreach ids [ bid ->
