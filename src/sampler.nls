@@ -88,22 +88,41 @@ to-report portfolio-from-index [idx]
 end
 
 to annotate-portfolio [portfolio]
-  ;; Clear existing patch labels and set each polygon's label at its envelope center patch
+  ;; Clear existing patch labels and place a label at the center of the
+  ;; merged envelope of ALL geometries for each block+cell-type key.
   ask patches [ set plabel "" ]
   foreach portfolio [ p ->
     let bid  item 0 p
     let opt  item 1 p
     let lblt item 3 opt  ;; option record [mix_id res nbs label]
-    let f table:get feature-by-id bid
-    let env gis:envelope-of f  ;; [minx miny maxx maxy]
-    let cx ( (item 0 env + item 2 env) / 2 )
-    let cy ( (item 1 env + item 3 env) / 2 )
-    let col (ifelse-value (table:has-key? colors-by-id bid)
-                [ table:get colors-by-id bid ]
-                [ black ])
-    ask patch cx cy [
-      set plabel (word "{" bid "} - " lblt)
-      set plabel-color col
+
+    let flist table:get feature-by-id bid  ;; may be a list of features
+    if (flist != nobody) [
+      ;; If a single feature was stored, normalize to a list
+      if not is-list? flist [ set flist (list flist) ]
+      if not empty? flist [
+        let env0 (gis:envelope-of (first flist))
+        let minx item 0 env0
+        let miny item 1 env0
+        let maxx item 2 env0
+        let maxy item 3 env0
+        foreach but-first flist [ f ->
+          let el (gis:envelope-of f)
+          if (item 0 el) < minx [ set minx item 0 el ]
+          if (item 1 el) < miny [ set miny item 1 el ]
+          if (item 2 el) > maxx [ set maxx item 2 el ]
+          if (item 3 el) > maxy [ set maxy item 3 el ]
+        ]
+        let cx ((minx + maxx) / 2)
+        let cy ((miny + maxy) / 2)
+        let col (ifelse-value (table:has-key? colors-by-id bid)
+                     [ table:get colors-by-id bid ]
+                     [ black ])
+        ask patch cx cy [
+          set plabel (word "{" bid "} - " lblt)
+          set plabel-color col
+        ]
+      ]
     ]
   ]
 end
