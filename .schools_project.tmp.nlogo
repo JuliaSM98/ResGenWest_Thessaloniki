@@ -115,8 +115,8 @@ PLOT
 826
 366
 CO2
-Iteration
-CO2 (Kg)
+NIL
+NIL
 0.0
 10.0
 0.0
@@ -133,8 +133,8 @@ PLOT
 418
 608
 Cost vs CO2
-Cost (€)
-CO2 (Kg)
+NIL
+NIL
 0.0
 10.0
 0.0
