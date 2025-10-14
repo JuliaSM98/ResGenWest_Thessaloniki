@@ -27,16 +27,17 @@ globals [
   last-total-cost         ;; number: total cost of last iteration
   last-total-co2          ;; number: total CO2 of last iteration
   colors-by-id            ;; table: id -> NetLogo color (number)
+  ;print-tables            ;; slider 0 (no) / 1 (yes)
 ]
 @#$#@#$#@
 GRAPHICS-WINDOW
-527
-19
-1028
-521
+857
+10
+1267
+421
 -1
 -1
-14.94
+12.2
 1
 10
 1
@@ -91,10 +92,10 @@ NIL
 1
 
 PLOT
-44
-137
-436
-373
+26
+130
+418
+366
 Cost
 NIL
 NIL
@@ -109,10 +110,10 @@ PENS
 "default" 1.0 2 -16777216 true "" ""
 
 PLOT
-1065
-132
-1457
-365
+434
+133
+826
+366
 CO2
 NIL
 NIL
@@ -126,11 +127,29 @@ false
 PENS
 "default" 1.0 2 -16777216 true "" ""
 
+PLOT
+26
+372
+418
+608
+Cost vs CO2
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 2 -16777216 true "" ""
+
 SWITCH
-281
-69
-412
-102
+262
+56
+393
+89
 print-tables
 print-tables
 1

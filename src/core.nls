@@ -52,6 +52,13 @@ to go
   set-plot-pen-mode 2  ;; points
   plotxy iter (item 1 tot)
 
+  ;; Cost vs CO2 scatter
+  set-current-plot "Cost vs CO2"
+  if not plot-pen-exists? "points" [ create-temporary-plot-pen "points" ]
+  set-current-plot-pen "points"
+  set-plot-pen-mode 2  ;; points
+  plotxy (item 0 tot) (item 1 tot)
+
   set combo-index combo-index + 1
   tick
 end
