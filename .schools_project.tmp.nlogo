@@ -347,7 +347,7 @@ pct_covered_by_trees
 pct_covered_by_trees
 0
 100
-50.0
+100.0
 1
 1
 %

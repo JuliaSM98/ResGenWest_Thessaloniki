@@ -54,6 +54,7 @@ to-report compute-portfolio-totals [portfolio]
 
     let rec table:get id-table bid
     let area item 0 rec
+    let ctyp item 1 rec
 
     ;; RES contributions (per m2)
     let res_area (area * res)
@@ -68,6 +69,13 @@ to-report compute-portfolio-totals [portfolio]
     let trees (ifelse-value (tree_cover_area > 0)
                  [ floor (eff_nbs_area / tree_cover_area) ]
                  [ 0 ])
+    ;; Roof load cap: trees <= floor(eff_nbs_area * max_roof_load / tree_weight)
+    if (ctyp = "roof") [
+      if (tree_weight > 0) [
+        let load_cap floor ((eff_nbs_area * max_roof_load) / tree_weight)
+        if trees > load_cap [ set trees load_cap ]
+      ]
+    ]
     let nbs_cost_total (trees * cost_NBS)
     let nbs_co2_total  (trees * co2_reduction_NBS)
 
@@ -158,6 +166,12 @@ to render-current-table [portfolio]
     let trees (ifelse-value (tree_cover_area > 0)
                  [ floor (eff_nbs_area / tree_cover_area) ]
                  [ 0 ])
+    if (ctyp = "roof") [
+      if (tree_weight > 0) [
+        let load_cap floor ((eff_nbs_area * max_roof_load) / tree_weight)
+        if trees > load_cap [ set trees load_cap ]
+      ]
+    ]
     let res_area (area * res)
     let nbs_co2 (trees * co2_reduction_NBS)
     let nbs_cost (trees * cost_NBS)
