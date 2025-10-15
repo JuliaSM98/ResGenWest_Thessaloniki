@@ -58,6 +58,7 @@ to reset-defaults
   set tree_weight            400
   set max_roof_load          100
   set max_pct_RES            100
+  set max_pct_NBS            100
   set cost_NBS               600
   set cost_RES               240
   set co2_reduction_NBS      25
@@ -222,10 +223,10 @@ kg
 HORIZONTAL
 
 SLIDER
-201
-235
-393
-268
+395
+184
+587
+217
 max_roof_load
 max_roof_load
 10
@@ -320,6 +321,21 @@ Assumptions:
 11
 0.0
 1
+
+SLIDER
+203
+233
+375
+266
+max_pct_NBS
+max_pct_NBS
+0
+100
+100.0
+1
+1
+%
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?

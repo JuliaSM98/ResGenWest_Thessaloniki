@@ -7,6 +7,10 @@ to init-portfolio-sampler
     let rec table:get id-table bid
     let ctype item 1 rec
     let opts table:get options-by-type ctype
+    if (length opts = 0) [
+      user-message (word "No available options for cell type '" ctype "' after applying max_pct_RES=" max_pct_RES "% and max_pct_NBS=" max_pct_NBS "% constraints. Adjust sliders and run setup again.")
+      stop
+    ]
     set counts lput (length opts) counts
   ]
   set max-portfolios product-of counts

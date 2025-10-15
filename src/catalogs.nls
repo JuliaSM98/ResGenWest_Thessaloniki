@@ -12,14 +12,27 @@ to build-catalogs-from-csvs
   let c-label   col-index options-header "label"
   if (c-mix_id = -1 or c-type = -1 or c-res = -1 or c-nbs = -1 or c-label = -1) [ stop ]
 
+  ;; Apply max percentage constraints from sliders (values are 0..100)
+  let maxr (max_pct_RES / 100)
+  let maxn (max_pct_NBS / 100)
+
   foreach options-rows [ row ->
-    let typ  item c-type  row
-    let rec  (list (item c-mix_id row)
-                   (normalize-pct item c-res row)
-                   (normalize-pct item c-nbs row)
-                   (item c-label  row))
-    let lst table:get options-by-type typ
-    table:put options-by-type typ (lput rec lst)
+    let typ   item c-type  row
+    let resf  (normalize-pct item c-res row)
+    let nbsf  (normalize-pct item c-nbs row)
+    if (resf <= maxr and nbsf <= maxn) [
+      let rec  (list (item c-mix_id row)
+                     resf
+                     nbsf
+                     (item c-label  row))
+      let lst table:get options-by-type typ
+      table:put options-by-type typ (lput rec lst)
+    ]
+  ]
+  print "=== Options by cell type ==="
+  foreach sort table:keys options-by-type [ k ->
+    let opts table:get options-by-type k
+    print (word k " : " opts)
   ]
 
   ;; Intensities are driven by sliders now; keep table empty for any extra actions.
