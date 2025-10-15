@@ -55,19 +55,24 @@ to-report compute-portfolio-totals [portfolio]
     let rec table:get id-table bid
     let area item 0 rec
 
+    ;; RES contributions (per m2)
     let res_area (area * res)
-    let nbs_area (area * nbs)
+    let resI intensity-of "RES"      ;; [cost_per_m2 co2_per_m2]
+    let res_cost_m2 item 0 resI
+    let res_co2_m2  item 1 resI
+    let res_cost_total (res_area * res_cost_m2)
+    let res_co2_total  (res_area * res_co2_m2)
 
-    let resI intensity-of "RES"
-    let nbsI intensity-of "NBS"
+    ;; NBS contributions (per tree) with coverage cap
+    let eff_nbs_area (area * (pct_covered_by_trees / 100) * nbs)
+    let trees (ifelse-value (tree_cover_area > 0)
+                 [ floor (eff_nbs_area / tree_cover_area) ]
+                 [ 0 ])
+    let nbs_cost_total (trees * cost_NBS)
+    let nbs_co2_total  (trees * co2_reduction_NBS)
 
-    let res_cost  item 0 resI
-    let res_co2   item 1 resI
-    let nbs_cost  item 0 nbsI
-    let nbs_co2   item 1 nbsI
-
-    set total-cost total-cost + (res_area * res_cost) + (nbs_area * nbs_cost)
-    set total-co2  total-co2  + (res_area * res_co2)  + (nbs_area * nbs_co2)
+    set total-cost total-cost + res_cost_total + nbs_cost_total
+    set total-co2  total-co2  + res_co2_total  + nbs_co2_total
   ]
   report (list total-cost total-co2)
 end
@@ -134,7 +139,7 @@ end
 to render-current-table [portfolio]
   ;; Print a simple table of selections and areas to the output
   output-print "-----------"
-  output-print "ID, Area_m2, Cell_Type, Mix_ID, RES%, NBS%, Label, CO2_kg/m2, Cost_€/m2, CO2_kg, Cost_€"
+  output-print "ID, Area_m2, Cell_Type, Mix_ID, RES%, NBS%, Label, # Trees, RES_m2, NBS_CO2_kg, NBS_Cost_€, RES_CO2_kg, RES_Cost_€, Total_CO2_kg, Total_Cost_€"
   foreach portfolio [ p ->
     let bid  item 0 p
     let opt  item 1 p                 ;; [mix_id res nbs label]
@@ -145,22 +150,30 @@ to render-current-table [portfolio]
     let rec  table:get id-table bid   ;; [area cell_type]
     let area item 0 rec
     let ctyp item 1 rec
-    ;; compute combined intensities and totals
-    let resI intensity-of "RES"
-    let nbsI intensity-of "NBS"
-    let res_cost  item 0 resI
-    let res_co2   item 1 resI
-    let nbs_cost  item 0 nbsI
-    let nbs_co2   item 1 nbsI
-    let co2_per_m2  ((res * res_co2) + (nbs * nbs_co2))
-    let cost_per_m2 ((res * res_cost) + (nbs * nbs_cost))
-    let co2_total (co2_per_m2 * area)
-    let cost_total (cost_per_m2 * area)
+    ;; compute per-fragment metrics
+    let resI intensity-of "RES"      ;; [cost_per_m2 co2_per_m2]
+    let res_cost_m2 item 0 resI
+    let res_co2_m2  item 1 resI
+    let eff_nbs_area (area * (pct_covered_by_trees / 100) * nbs)
+    let trees (ifelse-value (tree_cover_area > 0)
+                 [ floor (eff_nbs_area / tree_cover_area) ]
+                 [ 0 ])
+    let res_area (area * res)
+    let nbs_co2 (trees * co2_reduction_NBS)
+    let nbs_cost (trees * cost_NBS)
+    let res_co2 (res_area * res_co2_m2)
+    let res_cost (res_area * res_cost_m2)
+    let total_co2 (nbs_co2 + res_co2)
+    let total_cost (nbs_cost + res_cost)
     output-print (word bid ", " area ", " ctyp ", " mix ", " (precision (res * 100) 2) "% , " (precision (nbs * 100) 2) "% , " lbl ", "
-                       (precision co2_per_m2 4) " kg/m2, "
-                       (precision cost_per_m2 4) " €/m2, "
-                       (precision co2_total 2) " kg, "
-                       (precision cost_total 2) " €")
+                       trees ", "
+                       (precision res_area 2) " m2, "
+                       (precision nbs_co2 2) " kg, "
+                       (precision nbs_cost 2) " €, "
+                       (precision res_co2 2) " kg, "
+                       (precision res_cost 2) " €, "
+                       (precision total_co2 2) " kg, "
+                       (precision total_cost 2) " €")
   ]
   output-print ""
   output-print (word "Tick: " ticks "  Cost: " last-total-cost "  CO2: " last-total-co2)

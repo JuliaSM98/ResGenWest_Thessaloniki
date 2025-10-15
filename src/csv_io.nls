@@ -40,8 +40,5 @@ to preview-csvs
 
   print "=== intensities (from sliders) ==="
   print (word "RES: cost_€/m2=" cost_RES ", CO2_kg/m2=" co2_reduction_RES)
-  let a tree_cover_area
-  ifelse (a > 0)
-  [ print (word "NBS: cost_€/m2=" (cost_NBS / a) ", CO2_kg/m2=" (co2_reduction_NBS / a) "  (tree_cover_area=" a ")") ]
-  [ print (word "NBS: cost_€/m2=0, CO2_kg/m2=0  (tree_cover_area=" a ")") ]
+  print (word "NBS: cost_€/tree=" cost_NBS ", CO2_kg/tree·year=" co2_reduction_NBS )
 end
