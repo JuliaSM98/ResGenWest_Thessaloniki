@@ -130,7 +130,7 @@ end
 to render-current-table [portfolio]
   ;; Print a simple table of selections and areas to the output
   output-print "-----------"
-  output-print "ID, Area_m2, Cell_Type, Mix_ID, RES%, NBS%, Label"
+  output-print "ID, Area_m2, Cell_Type, Mix_ID, RES%, NBS%, Label, CO2_kg/m2, Cost_€/m2, CO2_kg, Cost_€"
   foreach portfolio [ p ->
     let bid  item 0 p
     let opt  item 1 p                 ;; [mix_id res nbs label]
@@ -141,7 +141,22 @@ to render-current-table [portfolio]
     let rec  table:get id-table bid   ;; [area cell_type]
     let area item 0 rec
     let ctyp item 1 rec
-    output-print (word bid ", " area ", " ctyp ", " mix ", " (precision (res * 100) 2) "% , " (precision (nbs * 100) 2) "% , " lbl)
+    ;; compute combined intensities and totals
+    let resI intensity-of "RES"
+    let nbsI intensity-of "NBS"
+    let res_cost  item 0 resI
+    let res_co2   item 1 resI
+    let nbs_cost  item 0 nbsI
+    let nbs_co2   item 1 nbsI
+    let co2_per_m2  ((res * res_co2) + (nbs * nbs_co2))
+    let cost_per_m2 ((res * res_cost) + (nbs * nbs_cost))
+    let co2_total (co2_per_m2 * area)
+    let cost_total (cost_per_m2 * area)
+    output-print (word bid ", " area ", " ctyp ", " mix ", " (precision (res * 100) 2) "% , " (precision (nbs * 100) 2) "% , " lbl ", "
+                       (precision co2_per_m2 4) " kg/m2, "
+                       (precision cost_per_m2 4) " €/m2, "
+                       (precision co2_total 2) " kg, "
+                       (precision cost_total 2) " €")
   ]
   output-print ""
   output-print (word "Tick: " ticks "  Cost: " last-total-cost "  CO2: " last-total-co2)

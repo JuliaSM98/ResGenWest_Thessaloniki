@@ -13,6 +13,7 @@ to build-id-table-from-dataset
   set colors-by-id table:make
 
   let areas-by-key table:make     ;; key -> total area
+  let ctype-by-key table:make     ;; key -> "roof" | "ground"
   let feats gis:feature-list-of blocks-ds
   let palette [ red green blue orange violet cyan brown magenta yellow pink turquoise ]
   let idx 0
@@ -41,6 +42,7 @@ to build-id-table-from-dataset
       let key (word base ":roof")
       let prev (ifelse-value (table:has-key? areas-by-key key) [ table:get areas-by-key key ] [ 0 ])
       table:put areas-by-key key (prev + roofA)
+      table:put ctype-by-key key "roof"
       if not table:has-key? feature-by-id key [
         table:put feature-by-id key []
         let col item (idx mod length palette) palette
@@ -54,6 +56,7 @@ to build-id-table-from-dataset
       let key (word base ":ground")
       let prev (ifelse-value (table:has-key? areas-by-key key) [ table:get areas-by-key key ] [ 0 ])
       table:put areas-by-key key (prev + groundA)
+      table:put ctype-by-key key "ground"
       if not table:has-key? feature-by-id key [
         table:put feature-by-id key []
         let col item (idx mod length palette) palette
@@ -68,7 +71,7 @@ to build-id-table-from-dataset
   ;; Populate id-table with [area cell_type] for each key
   foreach sort table:keys areas-by-key [ k ->
     let a table:get areas-by-key k
-    let cst (ifelse-value (member? ":roof" (sentence k)) [ "roof" ] [ "ground" ])
+    let cst (ifelse-value (table:has-key? ctype-by-key k) [ table:get ctype-by-key k ] [ "ground" ])
     table:put id-table k (list a cst)
   ]
 end
