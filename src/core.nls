@@ -9,7 +9,6 @@ to setup-core [options-path-arg shapefile-path-arg]
   load-shapefile shapefile-path-arg
   build-id-table-from-dataset
   fit-and-draw-dataset
-  show-id-list
 
   load-options-csv options-path-arg
   preview-csvs
@@ -17,6 +16,7 @@ to setup-core [options-path-arg shapefile-path-arg]
   ;; NEW: build catalogs and sampler state
   build-catalogs-from-csvs
   init-portfolio-sampler
+  set last-portfolio []
   reset-ticks
 end
 
@@ -26,6 +26,7 @@ to go-core
   if combo-index >= max-portfolios [ stop ]
 
   let portfolio portfolio-from-index combo-index
+  set last-portfolio portfolio
   let tot compute-portfolio-totals portfolio
   set last-total-cost item 0 tot
   set last-total-co2  item 1 tot
@@ -34,9 +35,6 @@ to go-core
   if print-tables [
     render-current-table portfolio
   ]
-
-  ;; paint current selection on patches (RES brown, NBS blue)
-  paint-portfolio portfolio
 
   ;; plot single point
   let iter (combo-index + 1)

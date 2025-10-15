@@ -29,7 +29,7 @@ to build-catalogs-from-csvs
       table:put options-by-type typ (lput rec lst)
     ]
   ]
-  print "=== Options by cell type ==="
+  print "=== Options available after parameter configuration==="
   foreach sort table:keys options-by-type [ k ->
     let opts table:get options-by-type k
     print (word k " : " opts)

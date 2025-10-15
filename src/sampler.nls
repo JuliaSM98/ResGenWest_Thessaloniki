@@ -104,6 +104,62 @@ to-report portfolio-from-index [idx]
   report result
 end
 
+;; -------- Monitors helpers (reporters by bid) --------
+
+to-report mix-for [bid]
+  if (last-portfolio = [] or last-portfolio = nobody) [ report nobody ]
+  let found nobody
+  foreach last-portfolio [ p ->
+    if (item 0 p) = bid [ set found (item 1 p) ]
+  ]
+  report found  ;; [mix_id res nbs label] or nobody
+end
+
+to-report area-of [bid]
+  if not table:has-key? id-table bid [ report 0 ]
+  report item 0 (table:get id-table bid)
+end
+
+to-report celltype-of [bid]
+  if not table:has-key? id-table bid [ report "" ]
+  report item 1 (table:get id-table bid)
+end
+
+to-report res-pct-of [bid]
+  let m mix-for bid
+  if m = nobody [ report 0 ]
+  report (item 1 m) * 100
+end
+
+to-report nbs-pct-of [bid]
+  let m mix-for bid
+  if m = nobody [ report 0 ]
+  report (item 2 m) * 100
+end
+
+to-report res-area-of [bid]
+  let m mix-for bid
+  if m = nobody [ report 0 ]
+  report (area-of bid) * (item 1 m)
+end
+
+to-report trees-of [bid]
+  let m mix-for bid
+  if m = nobody [ report 0 ]
+  let area area-of bid
+  let ctyp celltype-of bid
+  let nbs  item 2 m
+  let eff_nbs_area (area * (pct_covered_by_trees / 100) * nbs)
+  let trees (ifelse-value (tree_cover_area > 0) [ floor (eff_nbs_area / tree_cover_area) ] [ 0 ])
+  if (ctyp = "roof") [
+    if (tree_weight > 0) [
+      let load_cap floor ((eff_nbs_area * max_roof_load) / tree_weight)
+      if trees > load_cap [ set trees load_cap ]
+    ]
+  ]
+  report trees
+end
+
 
 to render-current-table [portfolio]
   ;; Print a simple table of selections and areas to the output

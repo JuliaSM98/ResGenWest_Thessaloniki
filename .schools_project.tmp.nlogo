@@ -68,9 +68,9 @@ to reset-defaults
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-683
+719
 16
-960
+996
 294
 -1
 -1
@@ -148,7 +148,7 @@ NIL
 PLOT
 494
 306
-958
+997
 551
 Cost & CO2
 Iteration
@@ -354,10 +354,10 @@ pct_covered_by_trees
 HORIZONTAL
 
 MONITOR
-977
-27
-1077
-72
+1020
+26
+1120
+71
 Block
 \"2.1:ground\"
 17
@@ -365,10 +365,10 @@ Block
 11
 
 MONITOR
-1085
-27
-1155
-72
+1128
+26
+1198
+71
 Area m2
 area-of \"2.1:ground\"
 17
@@ -376,10 +376,10 @@ area-of \"2.1:ground\"
 11
 
 MONITOR
-1163
-27
-1233
-72
+1206
+26
+1276
+71
 # Trees
 trees-of \"2.1:ground\"
 17
@@ -387,10 +387,10 @@ trees-of \"2.1:ground\"
 11
 
 MONITOR
-1241
-27
-1311
-72
+1284
+26
+1354
+71
 RES m2
 res-area-of \"2.1:ground\"
 17
@@ -398,10 +398,10 @@ res-area-of \"2.1:ground\"
 11
 
 MONITOR
-1319
-27
-1389
-72
+1362
+26
+1432
+71
 % NBS
 nbs-pct-of \"2.1:ground\"
 17
@@ -409,10 +409,10 @@ nbs-pct-of \"2.1:ground\"
 11
 
 MONITOR
-1397
-27
-1467
-72
+1440
+26
+1510
+71
 % RES
 res-pct-of \"2.1:ground\"
 17
@@ -420,10 +420,10 @@ res-pct-of \"2.1:ground\"
 11
 
 MONITOR
-977
-80
-1077
-125
+1020
+79
+1120
+124
 Block
 \"2.1:roof\"
 17
@@ -431,10 +431,10 @@ Block
 11
 
 MONITOR
-1085
-80
-1155
-125
+1128
+79
+1198
+124
 Area m2
 area-of \"2.1:roof\"
 17
@@ -442,10 +442,10 @@ area-of \"2.1:roof\"
 11
 
 MONITOR
-1163
-80
-1233
-125
+1206
+79
+1276
+124
 # Trees
 trees-of \"2.1:roof\"
 17
@@ -453,10 +453,10 @@ trees-of \"2.1:roof\"
 11
 
 MONITOR
-1241
-80
-1311
-125
+1284
+79
+1354
+124
 RES m2
 res-area-of \"2.1:roof\"
 17
@@ -464,10 +464,10 @@ res-area-of \"2.1:roof\"
 11
 
 MONITOR
-1319
-80
-1389
-125
+1362
+79
+1432
+124
 % NBS
 nbs-pct-of \"2.1:roof\"
 17
@@ -475,10 +475,10 @@ nbs-pct-of \"2.1:roof\"
 11
 
 MONITOR
-1397
-80
-1467
-125
+1440
+79
+1510
+124
 % RES
 res-pct-of \"2.1:roof\"
 17
@@ -486,10 +486,10 @@ res-pct-of \"2.1:roof\"
 11
 
 MONITOR
-977
-133
-1077
-178
+1020
+132
+1120
+177
 Block
 \"2.2:ground\"
 17
@@ -497,10 +497,10 @@ Block
 11
 
 MONITOR
-1085
-133
-1155
-178
+1128
+132
+1198
+177
 Area m2
 area-of \"2.2:ground\"
 17
@@ -508,10 +508,10 @@ area-of \"2.2:ground\"
 11
 
 MONITOR
-1163
-133
-1233
-178
+1206
+132
+1276
+177
 # Trees
 trees-of \"2.2:ground\"
 17
@@ -519,10 +519,10 @@ trees-of \"2.2:ground\"
 11
 
 MONITOR
-1241
-133
-1311
-178
+1284
+132
+1354
+177
 RES m2
 res-area-of \"2.2:ground\"
 17
@@ -530,10 +530,10 @@ res-area-of \"2.2:ground\"
 11
 
 MONITOR
-1319
-133
-1389
-178
+1362
+132
+1432
+177
 % NBS
 nbs-pct-of \"2.2:ground\"
 17
@@ -541,10 +541,10 @@ nbs-pct-of \"2.2:ground\"
 11
 
 MONITOR
-1397
-133
-1467
-178
+1440
+132
+1510
+177
 % RES
 res-pct-of \"2.2:ground\"
 17
@@ -552,10 +552,10 @@ res-pct-of \"2.2:ground\"
 11
 
 MONITOR
-977
-186
-1077
-231
+1020
+185
+1120
+230
 Block
 \"2.2:roof\"
 17
@@ -563,10 +563,10 @@ Block
 11
 
 MONITOR
-1085
-186
-1155
-231
+1128
+185
+1198
+230
 Area m2
 area-of \"2.2:roof\"
 17
@@ -574,10 +574,10 @@ area-of \"2.2:roof\"
 11
 
 MONITOR
-1163
-186
-1233
-231
+1206
+185
+1276
+230
 # Trees
 trees-of \"2.2:roof\"
 17
@@ -585,10 +585,10 @@ trees-of \"2.2:roof\"
 11
 
 MONITOR
-1241
-186
-1311
-231
+1284
+185
+1354
+230
 RES m2
 res-area-of \"2.2:roof\"
 17
@@ -596,10 +596,10 @@ res-area-of \"2.2:roof\"
 11
 
 MONITOR
-1319
-186
-1389
-231
+1362
+185
+1432
+230
 % NBS
 nbs-pct-of \"2.2:roof\"
 17
@@ -607,10 +607,10 @@ nbs-pct-of \"2.2:roof\"
 11
 
 MONITOR
-1397
-186
-1467
-231
+1440
+185
+1510
+230
 % RES
 res-pct-of \"2.2:roof\"
 17
@@ -618,10 +618,10 @@ res-pct-of \"2.2:roof\"
 11
 
 MONITOR
-977
-239
-1077
-284
+1020
+238
+1120
+283
 Block
 \"2.3:ground\"
 17
@@ -629,10 +629,10 @@ Block
 11
 
 MONITOR
-1085
-239
-1155
-284
+1128
+238
+1198
+283
 Area m2
 area-of \"2.3:ground\"
 17
@@ -640,10 +640,10 @@ area-of \"2.3:ground\"
 11
 
 MONITOR
-1163
-239
-1233
-284
+1206
+238
+1276
+283
 # Trees
 trees-of \"2.3:ground\"
 17
@@ -651,10 +651,10 @@ trees-of \"2.3:ground\"
 11
 
 MONITOR
-1241
-239
-1311
-284
+1284
+238
+1354
+283
 RES m2
 res-area-of \"2.3:ground\"
 17
@@ -662,10 +662,10 @@ res-area-of \"2.3:ground\"
 11
 
 MONITOR
-1319
-239
-1389
-284
+1362
+238
+1432
+283
 % NBS
 nbs-pct-of \"2.3:ground\"
 17
@@ -673,10 +673,10 @@ nbs-pct-of \"2.3:ground\"
 11
 
 MONITOR
-1397
-239
-1467
-284
+1440
+238
+1510
+283
 % RES
 res-pct-of \"2.3:ground\"
 17
@@ -684,10 +684,10 @@ res-pct-of \"2.3:ground\"
 11
 
 MONITOR
-977
-292
-1077
-337
+1020
+291
+1120
+336
 Block
 \"2.3:roof\"
 17
@@ -695,10 +695,10 @@ Block
 11
 
 MONITOR
-1085
-292
-1155
-337
+1128
+291
+1198
+336
 Area m2
 area-of \"2.3:roof\"
 17
@@ -706,10 +706,10 @@ area-of \"2.3:roof\"
 11
 
 MONITOR
-1163
-292
-1233
-337
+1206
+291
+1276
+336
 # Trees
 trees-of \"2.3:roof\"
 17
@@ -717,10 +717,10 @@ trees-of \"2.3:roof\"
 11
 
 MONITOR
-1241
-292
-1311
-337
+1284
+291
+1354
+336
 RES m2
 res-area-of \"2.3:roof\"
 17
@@ -728,10 +728,10 @@ res-area-of \"2.3:roof\"
 11
 
 MONITOR
-1319
-292
-1389
-337
+1362
+291
+1432
+336
 % NBS
 nbs-pct-of \"2.3:roof\"
 17
@@ -739,10 +739,10 @@ nbs-pct-of \"2.3:roof\"
 11
 
 MONITOR
-1397
-292
-1467
-337
+1440
+291
+1510
+336
 % RES
 res-pct-of \"2.3:roof\"
 17
@@ -750,10 +750,10 @@ res-pct-of \"2.3:roof\"
 11
 
 MONITOR
-977
-345
-1077
-390
+1020
+344
+1120
+389
 Block
 \"2.4:ground\"
 17
@@ -761,10 +761,10 @@ Block
 11
 
 MONITOR
-1085
-345
-1155
-390
+1128
+344
+1198
+389
 Area m2
 area-of \"2.4:ground\"
 17
@@ -772,10 +772,10 @@ area-of \"2.4:ground\"
 11
 
 MONITOR
-1163
-345
-1233
-390
+1206
+344
+1276
+389
 # Trees
 trees-of \"2.4:ground\"
 17
@@ -783,10 +783,10 @@ trees-of \"2.4:ground\"
 11
 
 MONITOR
-1241
-345
-1311
-390
+1284
+344
+1354
+389
 RES m2
 res-area-of \"2.4:ground\"
 17
@@ -794,10 +794,10 @@ res-area-of \"2.4:ground\"
 11
 
 MONITOR
-1319
-345
-1389
-390
+1362
+344
+1432
+389
 % NBS
 nbs-pct-of \"2.4:ground\"
 17
@@ -805,10 +805,10 @@ nbs-pct-of \"2.4:ground\"
 11
 
 MONITOR
-1397
-345
-1467
-390
+1440
+344
+1510
+389
 % RES
 res-pct-of \"2.4:ground\"
 17
@@ -816,10 +816,10 @@ res-pct-of \"2.4:ground\"
 11
 
 MONITOR
-977
-398
-1077
-443
+1020
+397
+1120
+442
 Block
 \"2.4:roof\"
 17
@@ -827,10 +827,10 @@ Block
 11
 
 MONITOR
-1085
-398
-1155
-443
+1128
+397
+1198
+442
 Area m2
 area-of \"2.4:roof\"
 17
@@ -838,10 +838,10 @@ area-of \"2.4:roof\"
 11
 
 MONITOR
-1163
-398
-1233
-443
+1206
+397
+1276
+442
 # Trees
 trees-of \"2.4:roof\"
 17
@@ -849,10 +849,10 @@ trees-of \"2.4:roof\"
 11
 
 MONITOR
-1241
-398
-1311
-443
+1284
+397
+1354
+442
 RES m2
 res-area-of \"2.4:roof\"
 17
@@ -860,10 +860,10 @@ res-area-of \"2.4:roof\"
 11
 
 MONITOR
-1319
-398
-1389
-443
+1362
+397
+1432
+442
 % NBS
 nbs-pct-of \"2.4:roof\"
 17
@@ -871,10 +871,10 @@ nbs-pct-of \"2.4:roof\"
 11
 
 MONITOR
-1397
-398
-1467
-443
+1440
+397
+1510
+442
 % RES
 res-pct-of \"2.4:roof\"
 17
@@ -882,10 +882,10 @@ res-pct-of \"2.4:roof\"
 11
 
 MONITOR
-977
-451
-1077
-496
+1020
+450
+1120
+495
 Block
 \"2.5:ground\"
 17
@@ -893,10 +893,10 @@ Block
 11
 
 MONITOR
-1085
-451
-1155
-496
+1128
+450
+1198
+495
 Area m2
 area-of \"2.5:ground\"
 17
@@ -904,10 +904,10 @@ area-of \"2.5:ground\"
 11
 
 MONITOR
-1163
-451
-1233
-496
+1206
+450
+1276
+495
 # Trees
 trees-of \"2.5:ground\"
 17
@@ -915,10 +915,10 @@ trees-of \"2.5:ground\"
 11
 
 MONITOR
-1241
-451
-1311
-496
+1284
+450
+1354
+495
 RES m2
 res-area-of \"2.5:ground\"
 17
@@ -926,10 +926,10 @@ res-area-of \"2.5:ground\"
 11
 
 MONITOR
-1319
-451
-1389
-496
+1362
+450
+1432
+495
 % NBS
 nbs-pct-of \"2.5:ground\"
 17
@@ -937,10 +937,10 @@ nbs-pct-of \"2.5:ground\"
 11
 
 MONITOR
-1397
-451
-1467
-496
+1440
+450
+1510
+495
 % RES
 res-pct-of \"2.5:ground\"
 17
@@ -948,10 +948,10 @@ res-pct-of \"2.5:ground\"
 11
 
 MONITOR
-977
-504
-1077
-549
+1020
+503
+1120
+548
 Block
 \"2.5:roof\"
 17
@@ -959,10 +959,10 @@ Block
 11
 
 MONITOR
-1085
-504
-1155
-549
+1128
+503
+1198
+548
 Area m2
 area-of \"2.5:roof\"
 17
@@ -970,10 +970,10 @@ area-of \"2.5:roof\"
 11
 
 MONITOR
-1163
-504
-1233
-549
+1206
+503
+1276
+548
 # Trees
 trees-of \"2.5:roof\"
 17
@@ -981,10 +981,10 @@ trees-of \"2.5:roof\"
 11
 
 MONITOR
-1241
-504
-1311
-549
+1284
+503
+1354
+548
 RES m2
 res-area-of \"2.5:roof\"
 17
@@ -992,10 +992,10 @@ res-area-of \"2.5:roof\"
 11
 
 MONITOR
-1319
-504
-1389
-549
+1362
+503
+1432
+548
 % NBS
 nbs-pct-of \"2.5:roof\"
 17
@@ -1003,10 +1003,10 @@ nbs-pct-of \"2.5:roof\"
 11
 
 MONITOR
-1397
-504
-1467
-549
+1440
+503
+1510
+548
 % RES
 res-pct-of \"2.5:roof\"
 17

@@ -38,7 +38,7 @@ to preview-csvs
   print (word "Header: " options-header)
   print (word " rows: " options-rows)
 
-  print "=== intensities (from sliders) ==="
+  print "=== Assumptions (from sliders) ==="
   print (word "RES: cost_€/m2=" cost_RES ", CO2_kg/m2=" co2_reduction_RES)
   print (word "NBS: cost_€/tree=" cost_NBS ", CO2_kg/tree·year=" co2_reduction_NBS )
 end

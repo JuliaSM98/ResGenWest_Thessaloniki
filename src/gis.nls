@@ -79,13 +79,3 @@ to fit-and-draw-dataset
   ]
 end
 
-to show-id-list
-  print "=== ID / AREA / CELL_TYPE ==="
-  foreach sort table:keys id-table [
-    k ->
-      let rec table:get id-table k
-      let a item 0 rec
-      let cst item 1 rec
-      print (word k " , " a " m^2 , " cst)
-  ]
-end
