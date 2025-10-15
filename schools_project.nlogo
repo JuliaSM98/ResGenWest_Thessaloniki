@@ -58,10 +58,10 @@ ticks
 30.0
 
 BUTTON
-24
-53
-91
-87
+19
+22
+86
+56
 NIL
 setup
 NIL
@@ -75,10 +75,10 @@ NIL
 1
 
 BUTTON
-140
-54
-217
-88
+104
+22
+181
+56
 go
 go
 T
@@ -92,13 +92,13 @@ NIL
 1
 
 PLOT
-26
-130
-418
-366
-Cost
+435
+369
+827
+605
+Cost & CO2
 Iteration
-Cost (€)
+Value
 0.0
 10.0
 0.0
@@ -107,25 +107,8 @@ true
 false
 "" ""
 PENS
-"default" 1.0 2 -16777216 true "" ""
-
-PLOT
-434
-133
-826
-366
-CO2
-Iteration
-CO2 (Kg)
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"default" 1.0 2 -16777216 true "" ""
+"Cost" 1.0 2 -16777216 true "" ""
+"CO2" 1.0 2 -7500403 true "" ""
 
 PLOT
 26
@@ -146,15 +129,135 @@ PENS
 "default" 1.0 2 -16777216 true "" ""
 
 SWITCH
-262
-56
-393
-89
+206
+24
+337
+57
 print-tables
 print-tables
 1
 1
 -1000
+
+SLIDER
+205
+184
+380
+217
+tree_cover_area
+tree_cover_area
+1
+10
+5.0
+1
+1
+m2
+HORIZONTAL
+
+SLIDER
+17
+183
+189
+216
+tree_weight
+tree_weight
+5
+1000
+400.0
+1
+1
+kg
+HORIZONTAL
+
+SLIDER
+201
+235
+393
+268
+max_roof_load
+max_roof_load
+10
+200
+100.0
+1
+1
+kg/m2
+HORIZONTAL
+
+SLIDER
+18
+232
+190
+265
+max_pct_RES
+max_pct_RES
+0
+100
+100.0
+1
+1
+%
+HORIZONTAL
+
+SLIDER
+206
+80
+378
+113
+cost_NBS
+cost_NBS
+0
+1000
+600.0
+1
+1
+€/tree
+HORIZONTAL
+
+SLIDER
+17
+79
+189
+112
+cost_RES
+cost_RES
+0
+1000
+240.0
+1
+1
+€/m2
+HORIZONTAL
+
+SLIDER
+286
+134
+548
+167
+co2_reduction_NBS
+co2_reduction_NBS
+0
+100
+25.0
+1
+1
+kg/(tree·year)
+HORIZONTAL
+
+SLIDER
+16
+133
+272
+166
+co2_reduction_RES
+co2_reduction_RES
+0
+100
+48.0
+1
+1
+kg/(m2·year)
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?

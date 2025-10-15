@@ -40,17 +40,19 @@ to go
 
   ;; plot single point
   let iter (combo-index + 1)
-  ;; Cost plot
-  set-current-plot "Cost"
-  if not plot-pen-exists? "points" [ create-temporary-plot-pen "points" ]
-  set-current-plot-pen "points"
+  ;; Combined Cost & CO2 plot (two pens)
+  set-current-plot "Cost & CO2"
+  ;; Cost pen
+  if not plot-pen-exists? "Cost" [ create-temporary-plot-pen "Cost" ]
+  set-current-plot-pen "Cost"
   set-plot-pen-mode 2  ;; points
+  set-plot-pen-color 105  ;; blue
   plotxy iter (item 0 tot)
-  ;; CO2 plot
-  set-current-plot "CO2"
-  if not plot-pen-exists? "points" [ create-temporary-plot-pen "points" ]
-  set-current-plot-pen "points"
+  ;; CO2 pen
+  if not plot-pen-exists? "CO2" [ create-temporary-plot-pen "CO2" ]
+  set-current-plot-pen "CO2"
   set-plot-pen-mode 2  ;; points
+  set-plot-pen-color 15   ;; red
   plotxy iter (item 1 tot)
 
   ;; Cost vs CO2 scatter
