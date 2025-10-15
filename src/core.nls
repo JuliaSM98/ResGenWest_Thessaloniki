@@ -30,12 +30,13 @@ to go-core
   set last-total-cost item 0 tot
   set last-total-co2  item 1 tot
 
-  ;; annotate selections on patches
-  annotate-portfolio portfolio
   ;; print current selection table (appears if an Output widget is present) when enabled via switch
   if print-tables [
     render-current-table portfolio
   ]
+
+  ;; paint current selection on patches (RES brown, NBS blue)
+  paint-portfolio portfolio
 
   ;; plot single point
   let iter (combo-index + 1)

@@ -26,7 +26,6 @@ globals [
   combo-index             ;; integer: current combination index (0..max-portfolios-1)
   last-total-cost         ;; number: total cost of last iteration
   last-total-co2          ;; number: total CO2 of last iteration
-  colors-by-id            ;; table: id -> NetLogo color (number)
   ;print-tables            ;; slider 0 (no) / 1 (yes)
 
   ;; Editable paths (set here or via code)
