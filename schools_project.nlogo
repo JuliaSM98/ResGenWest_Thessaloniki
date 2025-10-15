@@ -51,9 +51,6 @@ end
 
 to reset-defaults
   ;; Reset user-editable parameters and paths to defaults
-  set options-csv-path "data/csv/options.csv"
-  set shapefile-path   "data/shapefiles/Schools_B_R_U.shp"
-
   set tree_cover_area        5
   set tree_weight            400
   set max_roof_load          100
@@ -393,7 +390,7 @@ MONITOR
 72
 RES m2
 res-area-of \"2.1:ground\"
-17
+0
 1
 11
 
@@ -459,7 +456,7 @@ MONITOR
 125
 RES m2
 res-area-of \"2.1:roof\"
-17
+0
 1
 11
 
@@ -525,7 +522,7 @@ MONITOR
 178
 RES m2
 res-area-of \"2.2:ground\"
-17
+0
 1
 11
 
@@ -591,7 +588,7 @@ MONITOR
 231
 RES m2
 res-area-of \"2.2:roof\"
-17
+0
 1
 11
 
@@ -657,7 +654,7 @@ MONITOR
 284
 RES m2
 res-area-of \"2.3:ground\"
-17
+0
 1
 11
 
@@ -723,7 +720,7 @@ MONITOR
 337
 RES m2
 res-area-of \"2.3:roof\"
-17
+0
 1
 11
 
@@ -789,7 +786,7 @@ MONITOR
 390
 RES m2
 res-area-of \"2.4:ground\"
-17
+0
 1
 11
 
@@ -855,7 +852,7 @@ MONITOR
 443
 RES m2
 res-area-of \"2.4:roof\"
-17
+0
 1
 11
 
@@ -921,7 +918,7 @@ MONITOR
 496
 RES m2
 res-area-of \"2.5:ground\"
-17
+0
 1
 11
 
@@ -987,7 +984,7 @@ MONITOR
 549
 RES m2
 res-area-of \"2.5:roof\"
-17
+0
 1
 11
 
