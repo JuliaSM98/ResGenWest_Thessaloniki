@@ -1,18 +1,17 @@
 ;; Core entrypoints: setup and go
 
-to setup
+to setup-core [options-path-arg shapefile-path-arg]
   clear-all
   clear-drawing
   ask patches [ set pcolor white ]
 
   ;; Updated shapefile path (aggregates areas per block and cell type)
-  load-shapefile "data/shapefiles/Schools_B_R_U.shp"
+  load-shapefile shapefile-path-arg
   build-id-table-from-dataset
   fit-and-draw-dataset
   show-id-list
 
-  load-options-csv "data/csv/options.csv"
-  load-assumptions-csv "data/csv/cost_co2_assumptions.csv"
+  load-options-csv options-path-arg
   preview-csvs
 
   ;; NEW: build catalogs and sampler state
@@ -22,7 +21,7 @@ to setup
 end
 
 ;; Forever button calls this
-to go
+to go-core
   if not initialized? [ init-portfolio-sampler ]
   if combo-index >= max-portfolios [ stop ]
 

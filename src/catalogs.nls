@@ -22,20 +22,21 @@ to build-catalogs-from-csvs
     table:put options-by-type typ (lput rec lst)
   ]
 
+  ;; Intensities are driven by sliders now; keep table empty for any extra actions.
   set intensities table:make
-  let a-action  col-index assumptions-header "action_id"
-  let a-cost    col-index assumptions-header "cost_per_m2"
-  let a-co2     col-index assumptions-header "co2_per_m2"
-  if (a-action = -1 or a-cost = -1 or a-co2 = -1) [ stop ]
-
-  foreach assumptions-rows [ row ->
-    let act (word item a-action row)
-    table:put intensities act (list (as-number item a-cost row)
-                                    (as-number item a-co2 row))
-  ]
 end
 
 to-report intensity-of [action]
+  ;; Return [cost_per_m2 co2_per_m2]
+  if action = "RES" [
+    report (list cost_RES co2_reduction_RES)
+  ]
+  if action = "NBS" [
+    let a tree_cover_area
+    ifelse (a > 0)
+    [ report (list (cost_NBS / a) (co2_reduction_NBS / a)) ]
+    [ report (list 0 0) ]
+  ]
   if table:has-key? intensities action [ report table:get intensities action ]
   user-message (word "No intensity found for action=" action)
   report [0 0]

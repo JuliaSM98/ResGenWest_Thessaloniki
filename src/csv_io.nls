@@ -20,32 +20,6 @@ to load-options-csv [path]
   file-close
 end
 
-to load-assumptions-csv [path]
-  set assumptions-header []
-  set assumptions-rows   []
-  file-close-all
-  if not file-exists? path [
-    print (word "WARNING: file not found: " path)
-    stop
-  ]
-  file-open path
-  if file-at-end? [
-    print (word "WARNING: file is empty: " path)
-    file-close
-    stop
-  ]
-  set assumptions-header csv:from-row file-read-line
-  set assumptions-header map [ h -> clean-token (word h) ] assumptions-header
-
-  while [ not file-at-end? ] [
-    let line file-read-line
-    if length line > 0 [
-      set assumptions-rows lput (csv:from-row line) assumptions-rows
-    ]
-  ]
-  file-close
-end
-
 to-report clean-token [s]
   if (length s > 0) and (substring s 0 1 = "﻿") [
     set s substring s 1 length s
@@ -64,8 +38,10 @@ to preview-csvs
   print (word "Header: " options-header)
   print (word " rows: " options-rows)
 
-  print "=== cost_co2_assumptions.csv ==="
-  print (word "Header: " assumptions-header)
-  print (word " rows: " assumptions-rows)
+  print "=== intensities (from sliders) ==="
+  print (word "RES: cost_€/m2=" cost_RES ", CO2_kg/m2=" co2_reduction_RES)
+  let a tree_cover_area
+  ifelse (a > 0)
+  [ print (word "NBS: cost_€/m2=" (cost_NBS / a) ", CO2_kg/m2=" (co2_reduction_NBS / a) "  (tree_cover_area=" a ")") ]
+  [ print (word "NBS: cost_€/m2=0, CO2_kg/m2=0  (tree_cover_area=" a ")") ]
 end
-
