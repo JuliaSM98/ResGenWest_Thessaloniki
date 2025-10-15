@@ -48,15 +48,31 @@ end
 to go
   go-core
 end
+
+to reset-defaults
+  ;; Reset user-editable parameters and paths to defaults
+  set options-csv-path "data/csv/options.csv"
+  set shapefile-path   "data/shapefiles/Schools_B_R_U.shp"
+
+  set tree_cover_area        5
+  set tree_weight            400
+  set max_roof_load          100
+  set max_pct_RES            100
+  set cost_NBS               600
+  set cost_RES               240
+  set co2_reduction_NBS      25
+  set co2_reduction_RES      48
+  set print-tables           false
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
-857
-10
-1267
-421
+824
+11
+1329
+517
 -1
 -1
-12.2
+15.061
 1
 10
 1
@@ -110,11 +126,28 @@ NIL
 NIL
 1
 
+BUTTON
+346
+22
+455
+56
+Reset Params
+reset-defaults
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
 PLOT
-435
-369
-827
-605
+414
+281
+806
+517
 Cost & CO2
 Iteration
 Value
@@ -130,10 +163,10 @@ PENS
 "CO2" 1.0 2 -7500403 true "" ""
 
 PLOT
-14
-279
-406
-515
+15
+281
+407
+517
 Cost vs CO2
 Cost (€)
 CO2 (Kg)
@@ -148,10 +181,10 @@ PENS
 "default" 1.0 2 -16777216 true "" ""
 
 SWITCH
-206
-24
-337
-57
+471
+25
+602
+58
 print-tables
 print-tables
 1
@@ -219,10 +252,10 @@ max_pct_RES
 HORIZONTAL
 
 SLIDER
-206
-80
-378
-113
+197
+88
+369
+121
 cost_NBS
 cost_NBS
 0
@@ -235,9 +268,9 @@ HORIZONTAL
 
 SLIDER
 17
-79
+89
 189
-112
+122
 cost_RES
 cost_RES
 0
@@ -277,6 +310,16 @@ co2_reduction_RES
 1
 kg/(m2·year)
 HORIZONTAL
+
+TEXTBOX
+21
+67
+133
+85
+Assumptions:
+11
+0.0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
