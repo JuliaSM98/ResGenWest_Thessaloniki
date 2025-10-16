@@ -37,6 +37,8 @@ def main() -> None:
     # OR-Tools budget frontier parameters
     ap.add_argument('--budget-mode', choices=['tight', 'steps'], default='tight', help='Budget sweep strategy for ortools')
     ap.add_argument('--budget-steps', type=int, default=41, help='Steps for steps budget mode')
+    ap.add_argument('--refine-lexicographic', action='store_true', help='Minimize cost among max-CO2 plans (slower)')
+    ap.add_argument('--prune-frontier', action='store_true', help='Prune dominated points in the final frontier')
     ap.add_argument('--max-pct-res', type=float, default=100.0, help='Max % RES option allowed (0..100)')
     ap.add_argument('--max-pct-nbs', type=float, default=100.0, help='Max % NBS option allowed (0..100)')
 
@@ -81,9 +83,9 @@ def main() -> None:
     min_budget = sum(min(c for (c, _) in opts) for opts in int_block_opts)
     max_budget = sum(max(c for (c, _) in opts) for opts in int_block_opts)
     if args.budget_mode == 'tight':
-        res = frontier_by_budget_tight(int_block_opts, max_budget)
+        res = frontier_by_budget_tight(int_block_opts, max_budget, refine_lexicographic=args.refine_lexicographic, prune=args.prune_frontier)
     else:
-        res = frontier_by_budget_steps(int_block_opts, min_budget, max_budget, steps=args.budget_steps)
+        res = frontier_by_budget_steps(int_block_opts, min_budget, max_budget, steps=args.budget_steps, refine_lexicographic=args.refine_lexicographic, prune=args.prune_frontier)
     # Convert back to floats
     points = [(c / scale.cost, z / scale.co2) for (c, z, _sel) in res]
     selections = [sel for (_c, _z, sel) in res]

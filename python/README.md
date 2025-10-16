@@ -18,6 +18,9 @@ Run
     - `python -m optimizer.cli --uncovered-dir ../data/shapefiles/uncovered_spaces --options ../data/csv/options.csv --budget-mode steps --budget-steps 41 --out ../data/outputs/pareto_uncovered_ortools_steps.csv  --plot-out ../data/outputs/pareto_uncovered_ortools.png`
   - Save a plot of the frontier:
     - add `--plot-out ../data/outputs/pareto_uncovered_ortools.png` (optional `--plot-title "My Title"`)
+  - Performance knobs (both default OFF):
+    - Add `--refine-lexicographic` to minimize cost among max-CO2 solutions (slower; ensures cost-minimal tie-breaks).
+    - Add `--prune-frontier` to drop dominated points post-hoc (cheap; removes weakly dominated duplicates).
   
 
 Parameters (optional)
