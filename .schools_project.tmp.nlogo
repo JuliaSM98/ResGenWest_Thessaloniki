@@ -71,13 +71,13 @@ to reset-defaults
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-683
-16
-960
-294
+1050
+155
+1444
+550
 -1
 -1
-8.152
+11.7
 1
 10
 1
@@ -372,20 +372,20 @@ kW/m2
 HORIZONTAL
 
 CHOOSER
-977
-27
-1245
-72
+958
+21
+1226
+66
 selected-block
 selected-block
 "Total" "2.1:ground" "2.1:roof" "2.2:ground" "2.2:roof" "2.3:ground" "2.3:roof" "2.4:ground" "2.4:roof" "2.5:ground" "2.5:roof"
 0
 
 MONITOR
-983
-102
-1053
-147
+753
+81
+823
+126
 Area m2
 area-of-any selected-block
 17
@@ -393,10 +393,10 @@ area-of-any selected-block
 11
 
 MONITOR
-1068
-103
-1154
-148
+828
+81
+914
+126
 % Area used
 pct_covered_by_NBS_RES
 17
@@ -404,10 +404,10 @@ pct_covered_by_NBS_RES
 11
 
 MONITOR
-1166
-107
-1268
-152
+919
+82
+1021
+127
 Ratio RES-NBS
 ratio-res-nbs-any selected-block
 17
@@ -415,10 +415,10 @@ ratio-res-nbs-any selected-block
 11
 
 MONITOR
-985
-168
-1055
-213
+1026
+83
+1096
+128
 RES (kW)
 res-kw-of-any selected-block
 0
@@ -426,10 +426,10 @@ res-kw-of-any selected-block
 11
 
 MONITOR
-1076
-165
-1146
-210
+1100
+83
+1170
+128
 # Trees
 trees-of-any selected-block
 17
@@ -437,10 +437,10 @@ trees-of-any selected-block
 11
 
 MONITOR
-984
-235
-1114
-280
+1177
+83
+1307
+128
 Cost (€)
 cost-of-any selected-block
 0
@@ -448,10 +448,10 @@ cost-of-any selected-block
 11
 
 MONITOR
-1131
-236
-1271
-281
+1312
+84
+1452
+129
 CO2 offset (kg)
 co2-of-any selected-block
 0
