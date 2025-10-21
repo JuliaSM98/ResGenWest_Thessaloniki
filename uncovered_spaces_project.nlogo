@@ -53,7 +53,7 @@ to reset-defaults
   set max_roof_load          100
   set max_pct_RES            100
   set max_pct_NBS            100
-  set pct_covered_by_trees   50
+  set pct_covered_by_NBS_RES   50
   set cost_NBS               600
   set cost_RES               240
   set co2_reduction_NBS      25
@@ -227,9 +227,8 @@ SLIDER
 96
 564
 129
-pct_covered_by_trees
-pct_covered_by_trees
-0
+pct_covered_by_NBS_RES
+pct_covered_by_NBS_RES0
 100
 50.0
 1

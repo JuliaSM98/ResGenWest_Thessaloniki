@@ -56,8 +56,9 @@ to-report compute-portfolio-totals [portfolio]
     let area item 0 rec
     let ctyp item 1 rec
 
-    ;; RES contributions (per m2)
-    let res_area (area * res)
+    ;; RES contributions (per m2) — apply overall coverage to RES too
+    let cov (pct_covered_by_NBS_RES / 100)
+    let res_area (area * cov * res)
     let resI intensity-of "RES"      ;; [cost_per_m2 co2_per_m2]
     let res_cost_m2 item 0 resI
     let res_co2_m2  item 1 resI
@@ -65,7 +66,7 @@ to-report compute-portfolio-totals [portfolio]
     let res_co2_total  (res_area * res_co2_m2)
 
     ;; NBS contributions (per tree) with coverage cap
-    let eff_nbs_area (area * (pct_covered_by_trees / 100) * nbs)
+    let eff_nbs_area (area * cov * nbs)
     let trees (ifelse-value (tree_cover_area > 0)
                  [ floor (eff_nbs_area / tree_cover_area) ]
                  [ 0 ])
@@ -140,7 +141,7 @@ end
 to-report res-area-of [bid]
   let m mix-for bid
   if m = nobody [ report 0 ]
-  report (area-of bid) * (item 1 m)
+  report (area-of bid) * (pct_covered_by_NBS_RES / 100) * (item 1 m)
 end
 
 to-report trees-of [bid]
@@ -149,7 +150,7 @@ to-report trees-of [bid]
   let area area-of bid
   let ctyp celltype-of bid
   let nbs  item 2 m
-  let eff_nbs_area (area * (pct_covered_by_trees / 100) * nbs)
+  let eff_nbs_area (area * (pct_covered_by_NBS_RES / 100) * nbs)
   let trees (ifelse-value (tree_cover_area > 0) [ floor (eff_nbs_area / tree_cover_area) ] [ 0 ])
   if (ctyp = "roof") [
     if (tree_weight > 0) [
@@ -179,7 +180,8 @@ to render-current-table [portfolio]
     let resI intensity-of "RES"      ;; [cost_per_m2 co2_per_m2]
     let res_cost_m2 item 0 resI
     let res_co2_m2  item 1 resI
-    let eff_nbs_area (area * (pct_covered_by_trees / 100) * nbs)
+    let cov (pct_covered_by_NBS_RES / 100)
+    let eff_nbs_area (area * cov * nbs)
     let trees (ifelse-value (tree_cover_area > 0)
                  [ floor (eff_nbs_area / tree_cover_area) ]
                  [ 0 ])
@@ -189,7 +191,7 @@ to render-current-table [portfolio]
         if trees > load_cap [ set trees load_cap ]
       ]
     ]
-    let res_area (area * res)
+    let res_area (area * cov * res)
     let nbs_co2 (trees * co2_reduction_NBS)
     let nbs_cost (trees * cost_NBS)
     let res_co2 (res_area * res_co2_m2)

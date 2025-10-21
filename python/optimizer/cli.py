@@ -61,7 +61,7 @@ def main() -> None:
         co2_res=args.co2_res,
         cost_nbs=args.cost_nbs,
         co2_nbs=args.co2_nbs,
-        pct_covered_by_trees=args.pct_covered_by_trees,
+        pct_covered_by_NBS_RES=args.pct_covered_by_NBS_RES,
         tree_cover_area=args.tree_cover_area,
     )
 

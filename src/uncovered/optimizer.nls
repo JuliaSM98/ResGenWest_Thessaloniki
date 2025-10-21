@@ -56,7 +56,7 @@ to write-optimizer-args [path uncovered-dir options-csv budget-mode budget-steps
   file-print (word "--co2-res=" co2_reduction_RES)
   file-print (word "--cost-nbs=" cost_NBS)
   file-print (word "--co2-nbs=" co2_reduction_NBS)
-  file-print (word "--pct-covered-by-trees=" pct_covered_by_trees)
+  file-print (word "--pct-covered-by-trees=" pct_covered_by_NBS_RES)
   file-print (word "--tree-cover-area=" tree_cover_area)
   file-print (word "--max-pct-res=" max_pct_RES)
   file-print (word "--max-pct-nbs=" max_pct_NBS)
