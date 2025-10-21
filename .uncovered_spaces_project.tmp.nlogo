@@ -69,11 +69,11 @@ end
 GRAPHICS-WINDOW
 791
 10
-1395
-615
+1228
+448
 -1
 -1
-18.061
+13.0
 1
 10
 1
@@ -128,10 +128,10 @@ NIL
 1
 
 PLOT
-17
-322
-518
-594
+850
+216
+1351
+488
 Cost vs CO2 (Python)
 Cost (€)
 CO2 (kg
@@ -283,10 +283,10 @@ max_pct_NBS
 HORIZONTAL
 
 SLIDER
-14
-175
-186
-208
+9
+180
+181
+213
 budget_steps
 budget_steps
 2
