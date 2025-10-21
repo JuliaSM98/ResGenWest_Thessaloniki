@@ -161,18 +161,216 @@ to-report trees-of [bid]
   report trees
 end
 
+;; -------- Portfolio-wide totals and "any" reporters --------
+
+;; Totals based on the current selected portfolio (rows used in the table)
+to-report total-area-current
+  if (last-portfolio = [] or last-portfolio = nobody) [ report 0 ]
+  let total 0
+  foreach last-portfolio [ p ->
+    let bid item 0 p
+    set total total + area-of bid
+  ]
+  report total
+end
+
+to-report total-res-area-current
+  if (last-portfolio = [] or last-portfolio = nobody) [ report 0 ]
+  let total 0
+  foreach last-portfolio [ p ->
+    let bid item 0 p
+    let m mix-for bid
+    if m != nobody [
+      let area area-of bid
+      let res  item 1 m
+      let cov (pct_covered_by_NBS_RES / 100)
+      set total total + (area * cov * res)
+    ]
+  ]
+  report total
+end
+
+to-report total-trees-current
+  if (last-portfolio = [] or last-portfolio = nobody) [ report 0 ]
+  let total 0
+  foreach last-portfolio [ p ->
+    let bid item 0 p
+    set total total + trees-of bid
+  ]
+  report total
+end
+
+to-report avg-res-pct
+  ;; Average of per-block RES% for the current portfolio rows
+  if (last-portfolio = [] or last-portfolio = nobody) [ report 0 ]
+  let n 0
+  let s 0
+  foreach last-portfolio [ p ->
+    let bid item 0 p
+    let m mix-for bid
+    if m != nobody [
+      set s s + ((item 1 m) * 100)
+      set n n + 1
+    ]
+  ]
+  if n = 0 [ report 0 ]
+  report (s / n)
+end
+
+to-report avg-nbs-pct
+  ;; Average of per-block NBS% for the current portfolio rows
+  if (last-portfolio = [] or last-portfolio = nobody) [ report 0 ]
+  let n 0
+  let s 0
+  foreach last-portfolio [ p ->
+    let bid item 0 p
+    let m mix-for bid
+    if m != nobody [
+      set s s + ((item 2 m) * 100)
+      set n n + 1
+    ]
+  ]
+  if n = 0 [ report 0 ]
+  report (s / n)
+end
+
+to-report area-of-any [key]
+  if key = "Total" [ report total-area-current ]
+  report area-of key
+end
+
+to-report trees-of-any [key]
+  if key = "Total" [ report total-trees-current ]
+  report trees-of key
+end
+
+to-report res-area-of-any [key]
+  if key = "Total" [ report total-res-area-current ]
+  report res-area-of key
+end
+
+to-report res-pct-of-any [key]
+  if key = "Total" [ report avg-res-pct ]
+  report res-pct-of key
+end
+
+to-report nbs-pct-of-any [key]
+  if key = "Total" [ report avg-nbs-pct ]
+  report nbs-pct-of key
+end
+
+to-report cost-of [bid]
+  let m mix-for bid
+  if m = nobody [ report 0 ]
+  let rec  table:get id-table bid
+  let area item 0 rec
+  let ctyp item 1 rec
+  let res  item 1 m
+  let nbs  item 2 m
+  let cov (pct_covered_by_NBS_RES / 100)
+  ;; RES
+  let res_area (area * cov * res)
+  let resI intensity-of "RES"      ;; [cost_per_m2 co2_per_m2]
+  let res_cost_m2 item 0 resI
+  let res_cost (res_area * res_cost_m2)
+  ;; NBS
+  let eff_nbs_area (area * cov * nbs)
+  let trees (ifelse-value (tree_cover_area > 0)
+               [ floor (eff_nbs_area / tree_cover_area) ]
+               [ 0 ])
+  if (ctyp = "roof") [
+    if (tree_weight > 0) [
+      let load_cap floor ((eff_nbs_area * max_roof_load) / tree_weight)
+      if trees > load_cap [ set trees load_cap ]
+    ]
+  ]
+  let nbs_cost (trees * cost_NBS)
+  report (res_cost + nbs_cost)
+end
+
+to-report co2-of [bid]
+  let m mix-for bid
+  if m = nobody [ report 0 ]
+  let rec  table:get id-table bid
+  let area item 0 rec
+  let ctyp item 1 rec
+  let res  item 1 m
+  let nbs  item 2 m
+  let cov (pct_covered_by_NBS_RES / 100)
+  ;; RES
+  let res_area (area * cov * res)
+  let resI intensity-of "RES"      ;; [cost_per_m2 co2_per_m2]
+  let res_co2_m2 item 1 resI
+  let res_co2 (res_area * res_co2_m2)
+  ;; NBS
+  let eff_nbs_area (area * cov * nbs)
+  let trees (ifelse-value (tree_cover_area > 0)
+               [ floor (eff_nbs_area / tree_cover_area) ]
+               [ 0 ])
+  if (ctyp = "roof") [
+    if (tree_weight > 0) [
+      let load_cap floor ((eff_nbs_area * max_roof_load) / tree_weight)
+      if trees > load_cap [ set trees load_cap ]
+    ]
+  ]
+  let nbs_co2 (trees * co2_reduction_NBS)
+  report (res_co2 + nbs_co2)
+end
+
+to-report cost-of-any [key]
+  if key = "Total" [
+    if (last-portfolio = [] or last-portfolio = nobody) [ report 0 ]
+    let total 0
+    foreach last-portfolio [ p -> set total total + cost-of (item 0 p) ]
+    report total
+  ]
+  report cost-of key
+end
+
+to-report co2-of-any [key]
+  if key = "Total" [
+    if (last-portfolio = [] or last-portfolio = nobody) [ report 0 ]
+    let total 0
+    foreach last-portfolio [ p -> set total total + co2-of (item 0 p) ]
+    report total
+  ]
+  report co2-of key
+end
+
+to-report ratio-res-nbs-any [key]
+  let r res-pct-of-any key
+  let n nbs-pct-of-any key
+  report (word (precision r 0) "%-" (precision n 0) "%")
+end
+
+to-report res-kw-of-any [key]
+  report (res-area-of-any key) * res_kw_per_m2
+end
+
 
 to render-current-table [portfolio]
   ;; Print a simple table of selections and areas to the output
   output-print "-----------"
-  output-print "ID, Area_m2, Cell_Type, Mix_ID, RES%, NBS%, Label, # Trees, RES_m2, NBS_CO2_kg, NBS_Cost_€, RES_CO2_kg, RES_Cost_€, Total_CO2_kg, Total_Cost_€"
+  output-print "ID, Area_m2, RES%, NBS%, # Trees, RES_m2, NBS_CO2_kg, NBS_Cost_€, RES_CO2_kg, RES_Cost_€, Total_CO2_kg, Total_Cost_€"
+  ;; accumulators for totals
+  let sum_area 0
+  let sum_trees 0
+  let sum_res_area 0
+  let sum_nbs_co2 0
+  let sum_nbs_cost 0
+  let sum_res_co2 0
+  let sum_res_cost 0
+  let sum_total_co2 0
+  let sum_total_cost 0
+  let w_sum 0
+  let res_w_sum 0
+  let nbs_w_sum 0
+
   foreach portfolio [ p ->
     let bid  item 0 p
     let opt  item 1 p                 ;; [mix_id res nbs label]
-    let mix  item 0 opt
     let res  item 1 opt
     let nbs  item 2 opt
-    let lbl  item 3 opt
     let rec  table:get id-table bid   ;; [area cell_type]
     let area item 0 rec
     let ctyp item 1 rec
@@ -198,7 +396,22 @@ to render-current-table [portfolio]
     let res_cost (res_area * res_cost_m2)
     let total_co2 (nbs_co2 + res_co2)
     let total_cost (nbs_cost + res_cost)
-    output-print (word bid ", " area ", " ctyp ", " mix ", " (precision (res * 100) 2) "% , " (precision (nbs * 100) 2) "% , " lbl ", "
+    ;; accumulate totals
+    set sum_area (sum_area + area)
+    set sum_trees (sum_trees + trees)
+    set sum_res_area (sum_res_area + res_area)
+    set sum_nbs_co2 (sum_nbs_co2 + nbs_co2)
+    set sum_nbs_cost (sum_nbs_cost + nbs_cost)
+    set sum_res_co2 (sum_res_co2 + res_co2)
+    set sum_res_cost (sum_res_cost + res_cost)
+    set sum_total_co2 (sum_total_co2 + total_co2)
+    set sum_total_cost (sum_total_cost + total_cost)
+    let w (area * cov)
+    set w_sum (w_sum + w)
+    set res_w_sum (res_w_sum + (res * w))
+    set nbs_w_sum (nbs_w_sum + (nbs * w))
+
+    output-print (word bid ", " area ", " (precision (res * 100) 2) "% , " (precision (nbs * 100) 2) "% , "
                        trees ", "
                        (precision res_area 2) " m2, "
                        (precision nbs_co2 2) " kg, "
@@ -208,6 +421,22 @@ to render-current-table [portfolio]
                        (precision total_co2 2) " kg, "
                        (precision total_cost 2) " €")
   ]
+  ;; print totals row (use same averaging rule as monitors)
+  let avg_res_pct (avg-res-pct)
+  let avg_nbs_pct (avg-nbs-pct)
+  output-print ""
+  output-print (word "TOTAL, "
+                     (precision sum_area 2) ", "
+                     (precision avg_res_pct 2) "% , "
+                     (precision avg_nbs_pct 2) "% , "
+                     sum_trees ", "
+                     (precision sum_res_area 2) " m2, "
+                     (precision sum_nbs_co2 2) " kg, "
+                     (precision sum_nbs_cost 2) " €, "
+                     (precision sum_res_co2 2) " kg, "
+                     (precision sum_res_cost 2) " €, "
+                     (precision sum_total_co2 2) " kg, "
+                     (precision sum_total_cost 2) " €")
   output-print ""
   output-print (word "Tick: " ticks "  Cost: " last-total-cost "  CO2: " last-total-co2)
 end
