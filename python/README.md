@@ -2,7 +2,7 @@ Python Optimizer for Pareto Front (Uncovered Spaces)
 
 Overview
 - Goal: compute Pareto-efficient portfolios over uncovered space blocks by choosing one of the ground options per block to trade off total Cost (€) vs CO2 (kg).
-- Data: reads all shapefiles in `data/shapefiles/uncovered_spaces/Block_*.shp`, summing `Area_Uncov` per block. Uses `data/csv/options.csv` (filters `cell_type=ground`).
+- Data: reads uncovered blocks either from a directory of `Block_*.shp` (summing `Area_Uncov` per block) or from a single unified shapefile (e.g., `data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp`) with columns `Id`, `B_Number`, and `Area_U_m2` (summing per `Id.B_Number`). Uses `data/csv/options.csv` (filters `cell_type=ground`).
 - Assumptions: one option per block; cost/CO2 intensities and tree layout parameters mirror the NetLogo sliders.
 
 Install
@@ -13,7 +13,8 @@ Install
 Run
 - OR-Tools budget frontier (maximize CO2 for each budget):
   - Tight frontier (auto budgets):
-    - `python -m optimizer.cli --uncovered-dir ../data/shapefiles/uncovered_spaces --options ../data/csv/options.csv --budget-mode tight --out ../data/outputs/pareto_uncovered_ortools.csv --plot-out ../data/outputs/pareto_uncovered_ortools.png`
+    - Dir input: `python -m optimizer.cli --uncovered-dir ../data/shapefiles/uncovered_spaces --options ../data/csv/options.csv --budget-mode tight --out ../data/outputs/pareto_uncovered_ortools.csv --plot-out ../data/outputs/pareto_uncovered_ortools.png`
+    - Unified file: `python -m optimizer.cli --uncovered-dir ../data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp --options ../data/csv/options.csv --budget-mode tight --out ../data/outputs/pareto_uncovered_ortools.csv --plot-out ../data/outputs/pareto_uncovered_ortools.png`
   - Uniform budget steps between min and max cost:
     - `python -m optimizer.cli --uncovered-dir ../data/shapefiles/uncovered_spaces --options ../data/csv/options.csv --budget-mode steps --budget-steps 41 --out ../data/outputs/pareto_uncovered_ortools_steps.csv  --plot-out ../data/outputs/pareto_uncovered_ortools.png`
   - Save a plot of the frontier:

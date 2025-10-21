@@ -1,41 +1,15 @@
-extensions [csv shell table]
+__includes [ "src/uncovered/optimizer.nls" ]
+extensions [csv shell table gis]
 
-to run-optimizer-and-plot [python-exe uncovered-dir options-csv out-csv out-png budget-mode budget-steps refine-tie prune-frontier]
-  ;; Execute wrapper script to avoid argument parsing issues in shell:exec
-  let cmd "scripts/run_optimizer.sh"
-  print (word "Running script: " cmd)
-  let _out shell:exec cmd
-  if _out != "" [ print _out ]
+globals [
+  uncovered_path      ;; path to folder of Block_*.shp OR a single unified .shp
+  options_csv_path    ;; path to options.csv
+]
 
-  ;; Plot results
-  plot-optimizer-results out-csv "Cost vs CO2 (Python)"
-end
-
-to plot-optimizer-results [csv-path plot-name_elem]
-  if not file-exists? csv-path [
-    user-message (word "Results CSV not found: " csv-path)
-    stop
-  ]
-  set-current-plot plot-name_elem
-  clear-plot
-  file-close-all
-  file-open csv-path
-  if file-at-end? [ file-close stop ]
-  ;; consume header
-  let _header csv:from-row file-read-line
-  while [ not file-at-end? ] [
-    let line file-read-line
-    if length line > 0 [
-      let row csv:from-row line
-      ;; Expect: cost,co2,n_blocks; items may already be numbers
-      let cost item 0 row
-      let co2  item 1 row
-      if not is-number? cost [ set cost read-from-string cost ]
-      if not is-number? co2  [ set co2  read-from-string co2  ]
-      plotxy cost co2
-    ]
-  ]
-  file-close
+to reset-paths
+  ;; Edit these defaults in the Code tab as needed
+  set uncovered_path   "data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp"
+  set options_csv_path "data/csv/options.csv"
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -89,7 +63,7 @@ BUTTON
 164
 189
 Run optimizer
-        run-optimizer-and-plot\n        \"python\"\n        \"data/shapefiles/uncovered_spaces\"\n        \"data/csv/options.csv\"\n        \"data/outputs/pareto_uncovered_ortools.csv\"\n        \"data/outputs/pareto_uncovered_ortools.png\"\n        \"steps\"\n        41\n        false   ;; refine lexicographic (slower)\n        false   ;; prune frontier (cheap)
+        run-optimizer-and-plot\n        \"python\"\n        uncovered_path\n        options_csv_path\n        \"data/outputs/pareto_uncovered_ortools.csv\"\n        \"data/outputs/pareto_uncovered_ortools.png\"\n        \"steps\"\n        41\n        false   ;; refine lexicographic (slower)\n        false   ;; prune frontier (cheap)
 NIL
 1
 T
@@ -99,6 +73,126 @@ NIL
 NIL
 NIL
 1
+
+SLIDER
+16
+418
+188
+451
+cost_RES
+cost_RES
+0
+1000
+240.0
+1
+1
+€/m2
+HORIZONTAL
+
+SLIDER
+16
+456
+188
+489
+co2_reduction_RES
+co2_reduction_RES
+0
+100
+48.0
+1
+1
+kg/(m2·year)
+HORIZONTAL
+
+SLIDER
+204
+418
+376
+451
+cost_NBS
+cost_NBS
+0
+2000
+600.0
+1
+1
+€/tree
+HORIZONTAL
+
+SLIDER
+204
+456
+376
+489
+co2_reduction_NBS
+co2_reduction_NBS
+0
+200
+25.0
+1
+1
+kg/(tree·year)
+HORIZONTAL
+
+SLIDER
+394
+418
+566
+451
+pct_covered_by_trees
+pct_covered_by_trees
+0
+100
+50.0
+1
+1
+%
+HORIZONTAL
+
+SLIDER
+394
+456
+566
+489
+tree_cover_area
+tree_cover_area
+1
+20
+5.0
+1
+1
+m2/tree
+HORIZONTAL
+
+SLIDER
+584
+418
+756
+451
+max_pct_RES
+max_pct_RES
+0
+100
+100.0
+1
+1
+%
+HORIZONTAL
+
+SLIDER
+584
+456
+756
+489
+max_pct_NBS
+max_pct_NBS
+0
+100
+100.0
+1
+1
+%
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?

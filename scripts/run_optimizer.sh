@@ -38,7 +38,7 @@ fi
 PYTHON_BIN="$VENV_DIR/bin/python"
 
 # Inputs (customize as needed or override via env)
-UNCO_DIR="${UNCO_DIR:-data/shapefiles/uncovered_spaces}"
+UNCO_DIR="${UNCO_DIR:-data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp}"
 OPTIONS_CSV="${OPTIONS_CSV:-data/csv/options.csv}"
 OUT_CSV="${OUT_CSV:-data/outputs/pareto_uncovered_ortools.csv}"
 OUT_PNG="${OUT_PNG:-data/outputs/pareto_uncovered_ortools.png}"
@@ -69,6 +69,16 @@ if [[ "$REFINE" == "1" ]]; then
 fi
 if [[ "$PRUNE" == "1" ]]; then
   args+=( --prune-frontier )
+fi
+
+# Append extra args from file (one token per line, use --flag=value form)
+EXTRA_ARGS_FILE="$REPO_ROOT/data/outputs/optimizer_args.txt"
+if [[ -f "$EXTRA_ARGS_FILE" ]]; then
+  while IFS= read -r line; do
+    [[ -z "$line" ]] && continue
+    [[ "$line" =~ ^# ]] && continue
+    args+=( "$line" )
+  done < "$EXTRA_ARGS_FILE"
 fi
 
 exec "$PYTHON_BIN" "${args[@]}"

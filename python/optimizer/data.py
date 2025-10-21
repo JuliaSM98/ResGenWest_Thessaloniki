@@ -9,7 +9,7 @@ except Exception as e:  # pragma: no cover
 
 
 def list_block_shapefiles(uncovered_dir: str) -> List[str]:
-    """Return sorted list of shapefile paths matching Block_*.shp."""
+    """Return sorted list of shapefile paths matching Block_*.shp in a directory."""
     files = []
     if not os.path.isdir(uncovered_dir):
         raise FileNotFoundError(f"Uncovered dir not found: {uncovered_dir}")
@@ -32,18 +32,51 @@ def extract_block_number_from_filename(path: str) -> int:
     return int(m.group(1))
 
 
-def load_uncovered_blocks(uncovered_dir: str) -> List[Dict]:
-    """Load total uncovered area per block from multiple Block_*.shp files.
+def load_uncovered_blocks(uncovered_path: str) -> List[Dict]:
+    """Load total uncovered area per block.
 
-    Expects attribute `Area_Uncov` per geometry. Ignores `Id`.
-    Returns a list of dicts: { 'block': int, 'area_m2': float, 'path': str }.
+    Accepts either:
+    - a directory containing multiple Block_*.shp files (expects `Area_Uncov` in each), or
+    - a single shapefile path (expects unified schema with `Id`, `B_Number`, and `Area_U_m2`).
+
+    Returns a list of dicts: { 'block': str|int, 'area_m2': float, 'path': str }.
     """
     if fiona is None:
         raise RuntimeError(
             "Fiona is required to read shapefiles. Install dependencies with `pip install -r python/requirements.txt`."
         )
+    # Case 1: unified shapefile provided
+    if os.path.isfile(uncovered_path) and uncovered_path.lower().endswith('.shp'):
+        results: List[Dict] = []
+        # Aggregate uncovered area per (Id, B_Number) pair using Area_U_m2
+        accum: Dict[str, float] = {}
+        with fiona.open(uncovered_path, 'r') as src:
+            for feat in src:
+                props = feat.get('properties') or {}
+                pid = props.get('Id')
+                bno = props.get('B_Number')
+                key = f"{pid}.{bno}"
+                # accept numeric or string values; ignore missing
+                val = props.get('Area_U_m2')
+                v = None
+                if isinstance(val, (int, float)):
+                    v = float(val)
+                else:
+                    try:
+                        if val is not None:
+                            v = float(str(val))
+                    except Exception:
+                        v = None
+                if v is None:
+                    continue
+                accum[key] = accum.get(key, 0.0) + v
+        for key, total_area in sorted(accum.items(), key=lambda kv: kv[0]):
+            results.append({'block': key, 'area_m2': total_area, 'path': uncovered_path})
+        return results
+
+    # Case 2: directory of Block_*.shp files (legacy mode)
     results: List[Dict] = []
-    for shp in list_block_shapefiles(uncovered_dir):
+    for shp in list_block_shapefiles(uncovered_path):
         block = extract_block_number_from_filename(shp)
         total_area = 0.0
         with fiona.open(shp, 'r') as src:

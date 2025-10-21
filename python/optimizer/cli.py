@@ -31,7 +31,7 @@ def write_csv(out_path: str, points: Sequence[Tuple[float, float]], n_blocks: in
 
 def main() -> None:
     ap = argparse.ArgumentParser(description='Compute Pareto front for uncovered spaces.')
-    ap.add_argument('--uncovered-dir', required=True, help='Folder with Block_*.shp files')
+    ap.add_argument('--uncovered-dir', required=True, help='Folder with Block_*.shp files, or a single unified .shp file')
     ap.add_argument('--options', required=True, help='Path to options.csv')
     ap.add_argument('--out', required=True, help='Output CSV path for frontier points')
     # OR-Tools budget frontier parameters

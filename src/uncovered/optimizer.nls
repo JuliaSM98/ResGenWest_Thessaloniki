@@ -1,0 +1,68 @@
+;; Python optimizer integration and plotting (uncovered spaces)
+
+to run-optimizer-and-plot [python-exe uncovered-dir options-csv out-csv out-png budget-mode budget-steps refine-tie prune-frontier]
+  ;; write optimizer args from sliders so the script can pick them up
+  write-optimizer-args "data/outputs/optimizer_args.txt"
+  ;; Execute wrapper script with env overrides for paths and settings
+  let refine (ifelse-value refine-tie [1] [0])
+  let prune  (ifelse-value prune-frontier [1] [0])
+  let cmd (word
+             "UNCO_DIR=\"" uncovered-dir "\" "
+             "OPTIONS_CSV=\"" options-csv "\" "
+             "OUT_CSV=\"" out-csv "\" "
+             "OUT_PNG=\"" out-png "\" "
+             "BUDGET_MODE=\"" budget-mode "\" "
+             "BUDGET_STEPS=\"" budget-steps "\" "
+             "REFINE=\"" refine "\" "
+             "PRUNE=\"" prune "\" "
+             "scripts/run_optimizer.sh")
+  print (word "Running: " cmd)
+  let _out shell:exec cmd
+  if _out != "" [ print _out ]
+
+  ;; Plot results
+  plot-optimizer-results out-csv "Cost vs CO2 (Python)"
+end
+
+to write-optimizer-args [path]
+  file-close-all
+  if file-exists? path [ file-delete path ]
+  file-open path
+  ;; Write one CLI token per line in --flag=value form for safe reading in shell
+  file-print (word "--cost-res=" cost_RES)
+  file-print (word "--co2-res=" co2_reduction_RES)
+  file-print (word "--cost-nbs=" cost_NBS)
+  file-print (word "--co2-nbs=" co2_reduction_NBS)
+  file-print (word "--pct-covered-by-trees=" pct_covered_by_trees)
+  file-print (word "--tree-cover-area=" tree_cover_area)
+  file-print (word "--max-pct-res=" max_pct_RES)
+  file-print (word "--max-pct-nbs=" max_pct_NBS)
+  file-close
+end
+
+to plot-optimizer-results [csv-path plot-name_elem]
+  if not file-exists? csv-path [
+    user-message (word "Results CSV not found: " csv-path)
+    stop
+  ]
+  set-current-plot plot-name_elem
+  clear-plot
+  file-close-all
+  file-open csv-path
+  if file-at-end? [ file-close stop ]
+  ;; consume header
+  let _header csv:from-row file-read-line
+  while [ not file-at-end? ] [
+    let line file-read-line
+    if length line > 0 [
+      let row csv:from-row line
+      ;; Expect: cost,co2,n_blocks; items may already be numbers
+      let cost item 0 row
+      let co2  item 1 row
+      if not is-number? cost [ set cost read-from-string cost ]
+      if not is-number? co2  [ set co2  read-from-string co2  ]
+      plotxy cost co2
+    ]
+  ]
+  file-close
+end
