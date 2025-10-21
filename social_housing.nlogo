@@ -40,7 +40,7 @@ to setup
     set options-csv-path "data/csv/options.csv"
   ]
   if (not is-string? shapefile-path) or (shapefile-path = "") [
-    set shapefile-path "data/shapefiles/schools/Schools_B_R_U.shp"
+    set shapefile-path "data/shapefiles/social_housing/social_housing.shp"
   ]
   setup-core options-csv-path shapefile-path
 end
@@ -149,10 +149,10 @@ NIL
 1
 
 BUTTON
-451
-26
-633
-60
+453
+25
+635
+59
 Find under budget
 find-best-under-budget
 NIL
@@ -209,7 +209,7 @@ SWITCH
 58
 print-tables
 print-tables
-0
+1
 1
 -1000
 
@@ -397,7 +397,7 @@ budget_limit
 budget_limit
 0
 10000000
-100000.0
+1.0E7
 1000
 1
 €
@@ -410,8 +410,8 @@ CHOOSER
 66
 selected-block
 selected-block
-"Total" "2.1:ground" "2.1:roof" "2.2:ground" "2.2:roof" "2.3:ground" "2.3:roof" "2.4:ground" "2.4:roof" "2.5:ground" "2.5:roof"
-0
+"Total" "6.1:ground" "6.1:roof" "6.2:ground" "6.2:roof" "6.3:ground" "6.3:roof" "6.4:ground" "6.4:roof" "6.5:ground" "6.5:roof" "6.6:ground" "6.6:roof" "6.7:ground" "6.7:roof" "6.8:ground" "6.8:roof"
+2
 
 MONITOR
 753
@@ -420,7 +420,7 @@ MONITOR
 126
 Area m2
 area-of-any selected-block
-17
+0
 1
 11
 
