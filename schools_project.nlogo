@@ -148,6 +148,23 @@ NIL
 NIL
 1
 
+BUTTON
+453
+25
+635
+59
+Find under budget
+find-best-under-budget
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
 PLOT
 493
 282
@@ -192,7 +209,7 @@ SWITCH
 58
 print-tables
 print-tables
-0
+1
 1
 -1000
 
@@ -369,6 +386,21 @@ res_kw_per_m2
 0.01
 1
 kW/m2
+HORIZONTAL
+
+SLIDER
+584
+236
+771
+269
+budget_limit
+budget_limit
+0
+10000000
+1.0E7
+1000
+1
+€
 HORIZONTAL
 
 CHOOSER

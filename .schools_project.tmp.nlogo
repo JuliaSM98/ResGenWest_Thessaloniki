@@ -71,13 +71,13 @@ to reset-defaults
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-1050
-155
-1444
-550
+952
+143
+1366
+558
 -1
 -1
-11.7
+12.303030303030303
 1
 10
 1
@@ -148,11 +148,28 @@ NIL
 NIL
 1
 
+BUTTON
+451
+26
+633
+60
+Find under budget
+find-best-under-budget
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
 PLOT
-494
-306
-958
-551
+493
+282
+921
+553
 Cost & CO2
 Iteration
 Value
@@ -168,10 +185,10 @@ PENS
 "CO2" 1.0 2 -7500403 true "" ""
 
 PLOT
-16
-304
-482
-551
+20
+281
+477
+553
 Cost vs CO2
 Cost (€)
 CO2 (Kg)
@@ -369,6 +386,21 @@ res_kw_per_m2
 0.01
 1
 kW/m2
+HORIZONTAL
+
+SLIDER
+584
+236
+771
+269
+budget_limit
+budget_limit
+0
+10000000
+100000.0
+1000
+1
+€
 HORIZONTAL
 
 CHOOSER
