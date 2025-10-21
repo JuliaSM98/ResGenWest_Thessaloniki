@@ -108,32 +108,6 @@ def solve_max_co2_under_budget(block_opts: Sequence[Sequence[IntPoint]], budget_
     return res2
 
 
-def frontier_by_budget_tight(block_opts: Sequence[Sequence[IntPoint]], max_budget: int, *, refine_lexicographic: bool = False, prune: bool = False):
-    """Enumerate the frontier by tightening budget to the best solution's cost-1 until infeasible.
-
-    Returns a list of tuples (cost_int, co2_int, selection).
-    """
-
-    results: List[Tuple[int, int, List[int]]] = []
-    current_budget = max_budget
-    seen = set()
-    while current_budget >= 0:
-        res = solve_max_co2_under_budget(block_opts, current_budget, refine_lexicographic=refine_lexicographic)
-        if res is None:
-            break
-        c, z, sel = res
-        key = (c, z)
-        if key not in seen:
-            seen.add(key)
-            results.append((c, z, sel))
-        # Tighten budget just below achieved cost to explore new points
-        next_budget = c - 1
-        if next_budget < 0 or next_budget >= current_budget:
-            break
-        current_budget = next_budget
-    return prune_points(results) if prune else results
-
-
 def frontier_by_budget_steps(block_opts: Sequence[Sequence[IntPoint]], min_budget: int, max_budget: int, steps: int, *, refine_lexicographic: bool = False, prune: bool = False):
     """Compute frontier by sampling budgets uniformly between [min_budget, max_budget]."""
     if steps <= 1:

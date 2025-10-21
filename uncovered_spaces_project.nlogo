@@ -1,15 +1,69 @@
-__includes [ "src/uncovered/optimizer.nls" ]
+__includes [ "src/utils.nls" "src/csv_io.nls" "src/gis.nls" "src/catalogs.nls" "src/sampler.nls" "src/core.nls" "src/experiments.nls" "src/uncovered/optimizer.nls" ]
 extensions [csv shell table gis]
 
 globals [
-  uncovered_path      ;; path to folder of Block_*.shp OR a single unified .shp
-  options_csv_path    ;; path to options.csv
+  ;; GIS
+  blocks-ds               ;; loaded shapefile dataset
+  id-table                ;; table: ID -> [area_m2 cell_type]
+
+  ;; CSVs
+  options-header
+  options-rows
+  assumptions-header
+  assumptions-rows
+
+  ;; catalogs / sampler state
+  options-by-type         ;; table: "roof"/"ground" -> list of option records [mix_id res nbs label]
+  intensities             ;; table: action_id -> [cost_per_m2 co2_per_m2]
+  blocks-ordered          ;; stable list of block IDs (order we sample)
+  visited-portfolios      ;; table: key-string -> [total-cost total-co2]
+  max-portfolios          ;; integer = product of option counts by block
+  initialized?            ;; boolean, true after init-portfolio-sampler
+  feature-by-id           ;; table: id -> GIS feature (for labeling)
+  combo-index             ;; integer: current combination index (0..max-portfolios-1)
+  last-total-cost         ;; number: total cost of last iteration
+  last-total-co2          ;; number: total CO2 of last iteration
+  last-portfolio          ;; list: last computed portfolio [[bid opt] ...]
+  print-tables            ;; switch-like flag to control table printing
+
+  ;; Editable paths (set here or via code)
+  options-csv-path        ;; path to options.csv
+  shapefile-path          ;; path to unified shapefile (.shp) or directory
+
+  ;; Roof constraints used by sampler (define defaults here since we have no sliders)
+  tree_weight
+  max_roof_load
 ]
 
-to reset-paths
-  ;; Edit these defaults in the Code tab as needed
-  set uncovered_path   "data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp"
-  set options_csv_path "data/csv/options.csv"
+to setup
+  ;; Provide defaults if not set; users can edit these paths in the Code tab
+  if (not is-string? options-csv-path) or (options-csv-path = "") [
+    set options-csv-path "data/csv/options.csv"
+  ]
+  if (not is-string? shapefile-path) or (shapefile-path = "") [
+    set shapefile-path "data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp"
+  ]
+  setup-core options-csv-path shapefile-path
+end
+
+to reset-defaults
+  ;; Reset user-editable parameters and paths to defaults
+  set tree_cover_area        5
+  set tree_weight            400
+  set max_roof_load          100
+  set max_pct_RES            100
+  set max_pct_NBS            100
+  set pct_covered_by_trees   50
+  set cost_NBS               600
+  set cost_RES               240
+  set co2_reduction_NBS      25
+  set co2_reduction_RES      48
+  set print-tables           false
+  ;; Paths
+  set options-csv-path       "data/csv/options.csv"
+  set shapefile-path         "data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp"
+  ;; Optimizer steps slider
+  if is-number? budget_steps [ set budget_steps 41 ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -39,6 +93,40 @@ GRAPHICS-WINDOW
 ticks
 30.0
 
+BUTTON
+19
+22
+86
+56
+NIL
+setup
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+194
+23
+303
+57
+Reset Params
+reset-defaults
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
 PLOT
 790
 107
@@ -63,7 +151,7 @@ BUTTON
 164
 189
 Run optimizer
-        run-optimizer-and-plot\n        \"python\"\n        uncovered_path\n        options_csv_path\n        \"data/outputs/pareto_uncovered_ortools.csv\"\n        \"data/outputs/pareto_uncovered_ortools.png\"\n        \"steps\"\n        41\n        false   ;; refine lexicographic (slower)\n        false   ;; prune frontier (cheap)
+        run-optimizer-and-plot\n        \"python\"\n        shapefile-path\n        options-csv-path\n        \"data/outputs/pareto_uncovered_ortools.csv\"\n        \"data/outputs/pareto_uncovered_ortools.png\"\n        \"steps\"\n        41\n        false   ;; refine lexicographic (slower)\n        false   ;; prune frontier (cheap)
 NIL
 1
 T
@@ -192,6 +280,21 @@ max_pct_NBS
 1
 1
 %
+HORIZONTAL
+
+SLIDER
+16
+560
+188
+593
+budget_steps
+budget_steps
+2
+200
+41.0
+1
+1
+steps
 HORIZONTAL
 
 @#$#@#$#@

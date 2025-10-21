@@ -1,22 +1,33 @@
 ;; Python optimizer integration and plotting (uncovered spaces)
 
 to run-optimizer-and-plot [python-exe uncovered-dir options-csv out-csv out-png budget-mode budget-steps refine-tie prune-frontier]
-  ;; write optimizer args from sliders so the script can pick them up
-  write-optimizer-args "data/outputs/optimizer_args.txt"
-  ;; Execute wrapper script with env overrides for paths and settings
-  let refine (ifelse-value refine-tie [1] [0])
-  let prune  (ifelse-value prune-frontier [1] [0])
-  let cmd (word
-             "UNCO_DIR=\"" uncovered-dir "\" "
-             "OPTIONS_CSV=\"" options-csv "\" "
-             "OUT_CSV=\"" out-csv "\" "
-             "OUT_PNG=\"" out-png "\" "
-             "BUDGET_MODE=\"" budget-mode "\" "
-             "BUDGET_STEPS=\"" budget-steps "\" "
-             "REFINE=\"" refine "\" "
-             "PRUNE=\"" prune "\" "
-             "scripts/run_optimizer.sh")
-  print (word "Running: " cmd)
+  ;; Resolve effective paths even if user didn't run setup
+  let unco (ifelse-value (is-string? uncovered-dir and (length uncovered-dir > 0))
+               [ uncovered-dir ]
+               [ ifelse-value (is-string? shapefile-path and (length shapefile-path > 0))
+                   [ shapefile-path ]
+                   [ "data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp" ] ])
+  let optp (ifelse-value (is-string? options-csv and (length options-csv > 0))
+               [ options-csv ]
+               [ ifelse-value (is-string? options-csv-path and (length options-csv-path > 0))
+                   [ options-csv-path ]
+                   [ "data/csv/options.csv" ] ])
+
+  ;; Determine effective steps (prefer slider, else button arg, else 41)
+  let bs (ifelse-value (is-number? budget_steps)
+             [ budget_steps ]
+             [ ifelse-value (is-number? budget-steps) [ budget-steps ] [ 41 ] ])
+
+  ;; Debug prints: show both the slider and the computed steps
+  if is-number? budget_steps [ print (word "Slider budget_steps=" budget_steps) ]
+  if is-number? budget-steps [ print (word "Arg budget-steps=" budget-steps) ]
+  print (word "Effective budget-steps=" bs)
+
+  ;; write optimizer args from sliders so the script can pick them up and override defaults
+  write-optimizer-args "data/outputs/optimizer_args.txt" unco optp budget-mode bs refine-tie prune-frontier out-csv out-png
+  ;; Execute wrapper script (it reads args from data/outputs/optimizer_args.txt)
+  let cmd "scripts/run_optimizer.sh"
+  print (word "Running script: " cmd " with uncovered=" unco " options=" optp " steps=" bs)
   let _out shell:exec cmd
   if _out != "" [ print _out ]
 
@@ -24,11 +35,23 @@ to run-optimizer-and-plot [python-exe uncovered-dir options-csv out-csv out-png 
   plot-optimizer-results out-csv "Cost vs CO2 (Python)"
 end
 
-to write-optimizer-args [path]
+to write-optimizer-args [path uncovered-dir options-csv budget-mode budget-steps refine-tie prune-frontier out-csv out-png]
   file-close-all
   if file-exists? path [ file-delete path ]
   file-open path
   ;; Write one CLI token per line in --flag=value form for safe reading in shell
+  file-print (word "--uncovered-dir=" uncovered-dir)
+  file-print (word "--options=" options-csv)
+  file-print (word "--out=" out-csv)
+  file-print (word "--plot-out=" out-png)
+  ;; always use steps mode; determine step count from slider or param
+  file-print (word "--budget-mode=steps")
+  let bs (ifelse-value (is-number? budget_steps)
+             [ budget_steps ]
+             [ ifelse-value (is-number? budget-steps) [ budget-steps ] [ 41 ] ])
+  file-print (word "--budget-steps=" bs)
+  if refine-tie [ file-print "--refine-lexicographic" ]
+  if prune-frontier [ file-print "--prune-frontier" ]
   file-print (word "--cost-res=" cost_RES)
   file-print (word "--co2-res=" co2_reduction_RES)
   file-print (word "--cost-nbs=" cost_NBS)
@@ -47,6 +70,10 @@ to plot-optimizer-results [csv-path plot-name_elem]
   ]
   set-current-plot plot-name_elem
   clear-plot
+  ;; ensure we plot points, not lines
+  if not plot-pen-exists? "points" [ create-temporary-plot-pen "points" ]
+  set-current-plot-pen "points"
+  set-plot-pen-mode 2  ;; points
   file-close-all
   file-open csv-path
   if file-at-end? [ file-close stop ]

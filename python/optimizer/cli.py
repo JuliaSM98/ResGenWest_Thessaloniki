@@ -6,7 +6,7 @@ from typing import List, Sequence, Tuple
 from .data import load_uncovered_blocks
 from .options import load_ground_options
 from .model import Params, compute_block_option_metrics
-from .ortools_solver import Scale, scale_points, frontier_by_budget_tight, frontier_by_budget_steps
+from .ortools_solver import Scale, scale_points, frontier_by_budget_steps
 
 
 def build_block_options(blocks, options, params: Params) -> List[List[Tuple[float, float]]]:
@@ -34,9 +34,9 @@ def main() -> None:
     ap.add_argument('--uncovered-dir', required=True, help='Folder with Block_*.shp files, or a single unified .shp file')
     ap.add_argument('--options', required=True, help='Path to options.csv')
     ap.add_argument('--out', required=True, help='Output CSV path for frontier points')
-    # OR-Tools budget frontier parameters
-    ap.add_argument('--budget-mode', choices=['tight', 'steps'], default='tight', help='Budget sweep strategy for ortools')
-    ap.add_argument('--budget-steps', type=int, default=41, help='Steps for steps budget mode')
+    # OR-Tools budget frontier parameters (steps only)
+    ap.add_argument('--budget-mode', choices=['steps'], default='steps', help='Budget sweep strategy (steps only)')
+    ap.add_argument('--budget-steps', type=int, default=41, help='Number of budget samples (>=2)')
     ap.add_argument('--refine-lexicographic', action='store_true', help='Minimize cost among max-CO2 plans (slower)')
     ap.add_argument('--prune-frontier', action='store_true', help='Prune dominated points in the final frontier')
     ap.add_argument('--max-pct-res', type=float, default=100.0, help='Max % RES option allowed (0..100)')
@@ -82,10 +82,14 @@ def main() -> None:
     # Compute min/max budget range
     min_budget = sum(min(c for (c, _) in opts) for opts in int_block_opts)
     max_budget = sum(max(c for (c, _) in opts) for opts in int_block_opts)
-    if args.budget_mode == 'tight':
-        res = frontier_by_budget_tight(int_block_opts, max_budget, refine_lexicographic=args.refine_lexicographic, prune=args.prune_frontier)
-    else:
-        res = frontier_by_budget_steps(int_block_opts, min_budget, max_budget, steps=args.budget_steps, refine_lexicographic=args.refine_lexicographic, prune=args.prune_frontier)
+    res = frontier_by_budget_steps(
+        int_block_opts,
+        min_budget,
+        max_budget,
+        steps=max(args.budget_steps, 2),
+        refine_lexicographic=args.refine_lexicographic,
+        prune=args.prune_frontier,
+    )
     # Convert back to floats
     points = [(c / scale.cost, z / scale.co2) for (c, z, _sel) in res]
     selections = [sel for (_c, _z, sel) in res]
@@ -116,12 +120,12 @@ def main() -> None:
         os.makedirs(os.path.dirname(args.plot_out), exist_ok=True)
         xs = [c for c, _ in points]
         ys = [z for _, z in points]
-        # Sort by cost to draw a monotone line
+        # Sort by cost for a left-to-right scatter
         order = sorted(range(len(xs)), key=lambda i: xs[i])
         xs = [xs[i] for i in order]
         ys = [ys[i] for i in order]
         plt.figure(figsize=(6, 4))
-        plt.plot(xs, ys, marker='o', linestyle='-', color='#1f77b4')
+        plt.scatter(xs, ys, s=18, color='#1f77b4')
         plt.xlabel('Cost (€)')
         plt.ylabel('CO2 (kg)')
         plt.title(args.plot_title)

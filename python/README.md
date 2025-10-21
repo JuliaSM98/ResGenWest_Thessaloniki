@@ -12,11 +12,9 @@ Install
 
 Run
 - OR-Tools budget frontier (maximize CO2 for each budget):
-  - Tight frontier (auto budgets):
-    - Dir input: `python -m optimizer.cli --uncovered-dir ../data/shapefiles/uncovered_spaces --options ../data/csv/options.csv --budget-mode tight --out ../data/outputs/pareto_uncovered_ortools.csv --plot-out ../data/outputs/pareto_uncovered_ortools.png`
-    - Unified file: `python -m optimizer.cli --uncovered-dir ../data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp --options ../data/csv/options.csv --budget-mode tight --out ../data/outputs/pareto_uncovered_ortools.csv --plot-out ../data/outputs/pareto_uncovered_ortools.png`
-  - Uniform budget steps between min and max cost:
-    - `python -m optimizer.cli --uncovered-dir ../data/shapefiles/uncovered_spaces --options ../data/csv/options.csv --budget-mode steps --budget-steps 41 --out ../data/outputs/pareto_uncovered_ortools_steps.csv  --plot-out ../data/outputs/pareto_uncovered_ortools.png`
+  - Uniform budget steps between min and max cost (steps only):
+    - Dir input: `python -m optimizer.cli --uncovered-dir ../data/shapefiles/uncovered_spaces --options ../data/csv/options.csv --budget-steps 41 --out ../data/outputs/pareto_uncovered_ortools.csv  --plot-out ../data/outputs/pareto_uncovered_ortools.png`
+    - Unified file: `python -m optimizer.cli --uncovered-dir ../data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp --options ../data/csv/options.csv --budget-steps 41 --out ../data/outputs/pareto_uncovered_ortools.csv  --plot-out ../data/outputs/pareto_uncovered_ortools.png`
   - Save a plot of the frontier:
     - add `--plot-out ../data/outputs/pareto_uncovered_ortools.png` (optional `--plot-title "My Title"`)
   - Performance knobs (both default OFF):
@@ -38,4 +36,4 @@ Outputs
 
 Notes
 - All geometries inside a block share one decision; we aggregate block area first.
-- OR-Tools mode uses CP-SAT with integer-scaled costs/CO2 (cents and 0.01 kg) to maximize `CO2` under a budget. The `tight` mode walks budget breakpoints by repeatedly constraining cost to below the last optimum.
+- OR-Tools mode uses CP-SAT with integer-scaled costs/CO2 (cents and 0.01 kg) to maximize `CO2` under a budget.

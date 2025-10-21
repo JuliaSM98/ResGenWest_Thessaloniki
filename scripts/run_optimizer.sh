@@ -57,19 +57,9 @@ export PYTHONPATH="$REPO_ROOT/python${PYTHONPATH:+:$PYTHONPATH}"
 args=( -m optimizer.cli \
   --uncovered-dir "$UNCO_DIR" \
   --options "$OPTIONS_CSV" \
-  --budget-mode "$BUDGET_MODE" \
   --out "$OUT_CSV" \
   --plot-out "$OUT_PNG" )
 
-if [[ "$BUDGET_MODE" == "steps" ]]; then
-  args+=( --budget-steps "$BUDGET_STEPS" )
-fi
-if [[ "$REFINE" == "1" ]]; then
-  args+=( --refine-lexicographic )
-fi
-if [[ "$PRUNE" == "1" ]]; then
-  args+=( --prune-frontier )
-fi
 
 # Append extra args from file (one token per line, use --flag=value form)
 EXTRA_ARGS_FILE="$REPO_ROOT/data/outputs/optimizer_args.txt"
