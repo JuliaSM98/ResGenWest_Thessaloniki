@@ -25,7 +25,6 @@ globals [
   last-total-co2          ;; number: total CO2 of last iteration
   last-portfolio          ;; list: last computed portfolio [[bid opt] ...]
   print-tables            ;; switch-like flag to control table printing
-  budget_max            ;; numeric limit used by find-best-under-budget
 
   ;; Editable paths (set here or via code)
   options-csv-path        ;; path to options.csv
@@ -34,7 +33,6 @@ globals [
   ;; Roof constraints used by sampler (define defaults here since we have no sliders)
   tree_weight
   max_roof_load
-  res_kw_per_m2
 ]
 
 to setup
@@ -62,7 +60,9 @@ to reset-defaults
   set co2_reduction_RES      48
   set res_kw_per_m2          0.2
   set print-tables           false
-  set budget_max           1000000000
+  ;; Optimizer controls
+  set budget-max            10000000
+  set co2-min               0
   ;; Paths
   set options-csv-path       "data/csv/options.csv"
   set shapefile-path         "data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp"
@@ -71,13 +71,13 @@ to reset-defaults
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-998
-26
-1450
-479
+1082
+34
+1441
+394
 -1
 -1
-13.455
+10.64
 1
 10
 1
@@ -132,10 +132,10 @@ NIL
 1
 
 PLOT
-590
-207
-984
-479
+652
+138
+1070
+391
 Cost vs CO2 (Python)
 Cost (€)
 CO2 (kg
@@ -184,7 +184,7 @@ HORIZONTAL
 SLIDER
 14
 134
-186
+233
 167
 co2_reduction_RES
 co2_reduction_RES
@@ -212,9 +212,9 @@ cost_NBS
 HORIZONTAL
 
 SLIDER
-202
+240
 134
-374
+466
 167
 co2_reduction_NBS
 co2_reduction_NBS
@@ -227,9 +227,9 @@ kg/(tree·year)
 HORIZONTAL
 
 SLIDER
-392
+386
 96
-564
+571
 129
 pct_covered_by_NBS_RES
 pct_covered_by_NBS_RES
@@ -242,10 +242,10 @@ pct_covered_by_NBS_RES
 HORIZONTAL
 
 SLIDER
-392
-134
-564
-167
+471
+135
+643
+168
 tree_cover_area
 tree_cover_area
 1
@@ -257,9 +257,9 @@ m2/tree
 HORIZONTAL
 
 SLIDER
-582
+580
 96
-754
+752
 129
 max_pct_RES
 max_pct_RES
@@ -272,10 +272,10 @@ max_pct_RES
 HORIZONTAL
 
 SLIDER
-582
-134
-754
-167
+757
+98
+929
+131
 max_pct_NBS
 max_pct_NBS
 0
@@ -302,25 +302,25 @@ steps
 HORIZONTAL
 
 SLIDER
-12
-268
-184
-301
+13
+242
+185
+275
 budget-max
 budget-max
 0
 10000000
-4777070.0
+1.0E7
 1
 1
 NIL
 HORIZONTAL
 
 BUTTON
-206
-272
-413
-307
+193
+245
+400
+280
 optimizer with budget
 run-optimizer-under-budget-and-plot\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/solve_under_budget.csv\"\n    \"data/outputs/solve_under_budget.png\"
 NIL
@@ -334,25 +334,25 @@ NIL
 1
 
 SLIDER
-12
-309
-184
-342
+13
+283
+185
+316
 co2-min
 co2-min
 0
 10000000
-1910828.0
+0.0
 1
 1
 kg
 HORIZONTAL
 
 BUTTON
-205
-312
-413
-345
+192
+285
+400
+318
 optimizer with CO2
 run-optimizer-above-co2-and-save\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/solve_above_co2.csv\"
 NIL
@@ -366,10 +366,10 @@ NIL
 1
 
 BUTTON
-206
-353
-414
-386
+407
+265
+541
+298
 optimizer with both
 run-optimizer-both-constraints\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/solve_both_constraints.csv\"
 NIL
@@ -382,6 +382,21 @@ NIL
 NIL
 1
 
+SLIDER
+202
+174
+374
+207
+res_kw_per_m2
+res_kw_per_m2
+0
+1
+0.2
+0.01
+1
+kW/m2
+HORIZONTAL
+
 TEXTBOX
 22
 75
@@ -393,11 +408,108 @@ Assumptions:
 1
 
 TEXTBOX
-18
-243
-168
-261
+19
+217
+169
+235
 Optimal solution:
+11
+0.0
+1
+
+CHOOSER
+13
+351
+281
+396
+selected-block
+selected-block
+"Total" "9.Block_1:ground" "9.Block_2:ground" "9.Block_3:ground" "9.Block_4:ground" "9.Block_5:ground" "9.Block_6:ground" "9.Block_7:ground" "9.Block_8:ground" "9.Block_9:ground" "9.Block_10:ground" "9.Block_11:ground" "9.Block_12:ground" "9.Block_13:ground" "9.Block_14:ground" "9.Block_15:ground" "9.Block_16:ground" "9.Block_17:ground" "9.Block_18:ground" "9.Block_19:ground" "9.Block_20:ground" "9.Block_21:ground" "9.Block_22:ground" "9.Block_23:ground" "9.Block_24:ground" "9.Block_25:ground" "9.Block_26:ground" "9.Block_27:ground" "9.Block_28:ground" "9.Block_29:ground" "9.Block_30:ground" "9.Block_31:ground" "9.Block_32:ground" "9.Block_33:ground" "9.Block_34:ground" "9.Block_35:ground" "9.Block_36:ground" "9.Block_37:ground" "9.Block_38:ground" "9.Block_39:ground" "9.Block_40:ground" "9.Block_41:ground" "9.Block_42:ground" "9.Block_43:ground" "9.Block_44:ground" "9.Block_45:ground" "9.Block_46:ground" "9.Block_47:ground" "9.Block_48:ground" "9.Block_49:ground" "9.Block_50:ground" "9.Block_51:ground" "9.Block_52:ground" "9.Block_53:ground" "9.Block_54:ground" "9.Block_55:ground" "9.Block_56:ground" "9.Block_57:ground" "9.Block_58:ground" "9.Block_59:ground" "9.Block_60:ground" "9.Block_61:ground"
+0
+
+MONITOR
+12
+406
+104
+451
+Area m2
+area-of-any selected-block
+0
+1
+11
+
+MONITOR
+108
+406
+198
+451
+% Area used
+pct_covered_by_NBS_RES
+17
+1
+11
+
+MONITOR
+520
+410
+610
+455
+Cost (€)
+cost-of-any selected-block
+0
+1
+11
+
+MONITOR
+615
+410
+719
+455
+CO2 offset (kg)
+co2-of-any selected-block
+0
+1
+11
+
+MONITOR
+414
+410
+514
+455
+# Trees
+trees-of-any selected-block
+17
+1
+11
+
+MONITOR
+308
+408
+408
+453
+RES (kW)
+res-kw-of-any selected-block
+0
+1
+11
+
+MONITOR
+205
+407
+303
+452
+Ratio RES-NBS
+ratio-res-nbs-any selected-block
+17
+1
+11
+
+TEXTBOX
+19
+327
+169
+345
+Output:\n
 11
 0.0
 1

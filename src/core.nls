@@ -64,14 +64,14 @@ to go-core
   tick
 end
 
-;; Find best solution under a budget limit: maximize CO2 with cost <= budget_max
+;; Find best solution under a budget limit: maximize CO2 with cost <= budget-max
 to find-best-under-budget
   if not initialized? [ init-portfolio-sampler ]
-  if not is-number? budget_max [
-    user-message "Please set a numeric budget_max first."
+  if not is-number? budget-max [
+    user-message "Please set a numeric budget-max first."
     stop
   ]
-  let limit budget_max
+  let limit budget-max
   let best-i -1
   let best-portfolio []
   let best-cost -1

@@ -196,6 +196,15 @@ def main() -> None:
         if sol is None:
             # No feasible solution
             write_csv(args.out, [], n_blocks=len(blocks))
+            # Overwrite selections/table outputs to avoid stale data
+            if args.selections_out:
+                os.makedirs(os.path.dirname(args.selections_out), exist_ok=True)
+                with open(args.selections_out, 'w') as f:
+                    f.write('solution_id,total_cost,total_co2,block_index,block_key,area_m2,mix_id,res_pct,nbs_pct\n')
+            if args.table_out:
+                os.makedirs(os.path.dirname(args.table_out), exist_ok=True)
+                with open(args.table_out, 'w') as f:
+                    f.write('ID, Area_m2, RES%, NBS%, # Trees, RES_m2, NBS_CO2_kg, NBS_Cost_€, RES_CO2_kg, RES_Cost_€, Total_CO2_kg, Total_Cost_€\n')
             return
         c_int, z_int, sel = sol
         point = (c_int / scale.cost, z_int / scale.co2)
@@ -218,6 +227,14 @@ def main() -> None:
         sol = solve_min_cost_above_co2(int_block_opts, co2_int)
         if sol is None:
             write_csv(args.out, [], n_blocks=len(blocks))
+            if args.selections_out:
+                os.makedirs(os.path.dirname(args.selections_out), exist_ok=True)
+                with open(args.selections_out, 'w') as f:
+                    f.write('solution_id,total_cost,total_co2,block_index,block_key,area_m2,mix_id,res_pct,nbs_pct\n')
+            if args.table_out:
+                os.makedirs(os.path.dirname(args.table_out), exist_ok=True)
+                with open(args.table_out, 'w') as f:
+                    f.write('ID, Area_m2, RES%, NBS%, # Trees, RES_m2, NBS_CO2_kg, NBS_Cost_€, RES_CO2_kg, RES_Cost_€, Total_CO2_kg, Total_Cost_€\n')
             return
         c_int, z_int, sel = sol
         point = (c_int / scale.cost, z_int / scale.co2)
@@ -241,6 +258,14 @@ def main() -> None:
         sol = solve_both_constraints(int_block_opts, budget_int, co2_int)
         if sol is None:
             write_csv(args.out, [], n_blocks=len(blocks))
+            if args.selections_out:
+                os.makedirs(os.path.dirname(args.selections_out), exist_ok=True)
+                with open(args.selections_out, 'w') as f:
+                    f.write('solution_id,total_cost,total_co2,block_index,block_key,area_m2,mix_id,res_pct,nbs_pct\n')
+            if args.table_out:
+                os.makedirs(os.path.dirname(args.table_out), exist_ok=True)
+                with open(args.table_out, 'w') as f:
+                    f.write('ID, Area_m2, RES%, NBS%, # Trees, RES_m2, NBS_CO2_kg, NBS_Cost_€, RES_CO2_kg, RES_Cost_€, Total_CO2_kg, Total_Cost_€\n')
             return
         c_int, z_int, sel = sol
         point = (c_int / scale.cost, z_int / scale.co2)

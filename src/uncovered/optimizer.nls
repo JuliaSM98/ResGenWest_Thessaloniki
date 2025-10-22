@@ -1,6 +1,11 @@
 ;; Python optimizer integration and plotting (uncovered spaces)
 
 to run-optimizer-and-plot [python-exe uncovered-dir options-csv out-csv out-png budget-mode budget-steps]
+  ;; Require setup to be run first (consistent with schools model)
+  if (not is-boolean? initialized?) or (initialized? = false) [
+    user-message "Please click setup first to load data and initialize."
+    stop
+  ]
   ;; Resolve effective paths even if user didn't run setup
   let unco (ifelse-value (is-string? uncovered-dir and (length uncovered-dir > 0))
                [ uncovered-dir ]
@@ -35,6 +40,11 @@ end
 
 ;; Single-solve: maximize CO2 under a budget (uses budget-max slider)
 to run-optimizer-under-budget-and-plot [python-exe uncovered-dir options-csv out-csv out-png]
+  ;; Require setup to be run first
+  if (not is-boolean? initialized?) or (initialized? = false) [
+    user-message "Please click setup first to load data and initialize."
+    stop
+  ]
   let unco (ifelse-value (is-string? uncovered-dir and (length uncovered-dir > 0))
                [ uncovered-dir ]
                [ ifelse-value (is-string? shapefile-path and (length shapefile-path > 0))
@@ -51,11 +61,17 @@ to run-optimizer-under-budget-and-plot [python-exe uncovered-dir options-csv out
   print (word "Running single-solve under budget: " budget-max)
   let _out shell:exec cmd
   if _out != "" [ print _out ]
-  plot-optimizer-results out-csv "Cost vs CO2 (Python)"
+  ;; adopt or show popup if not found
+  adopt-or-popup "data/outputs/solve_under_budget_selections.csv" (word "budget=" budget-max)
 end
 
 ;; Single-solve: minimize cost subject to CO2 >= co2-min slider
 to run-optimizer-above-co2-and-save [python-exe uncovered-dir options-csv out-csv]
+  ;; Require setup to be run first
+  if (not is-boolean? initialized?) or (initialized? = false) [
+    user-message "Please click setup first to load data and initialize."
+    stop
+  ]
   ;; Resolve effective paths even if user didn't run setup
   let unco (ifelse-value (is-string? uncovered-dir and (length uncovered-dir > 0))
                [ uncovered-dir ]
@@ -77,6 +93,7 @@ to run-optimizer-above-co2-and-save [python-exe uncovered-dir options-csv out-cs
   file-print (word "--mode=min-cost-above-co2")
   if is-number? co2-min [ file-print (word "--co2-min=" co2-min) ]
   file-print (word "--portfolios-out=" "data/outputs/solve_above_co2.json")
+  file-print (word "--selections-out=" "data/outputs/solve_above_co2_selections.csv")
   file-print (word "--table-out=" "data/outputs/solve_above_co2_table.csv")
   file-print (word "--cost-res=" cost_RES)
   file-print (word "--co2-res=" co2_reduction_RES)
@@ -91,10 +108,16 @@ to run-optimizer-above-co2-and-save [python-exe uncovered-dir options-csv out-cs
   print (word "Running single-solve with CO2 >= " co2-min)
   let _out shell:exec cmd
   if _out != "" [ print _out ]
+  adopt-or-popup "data/outputs/solve_above_co2_selections.csv" (word "CO2 >= " co2-min)
 end
 
 ;; Single-solve: both constraints — maximize CO2 with cost<=budget-max and CO2>=co2-min
 to run-optimizer-both-constraints [python-exe uncovered-dir options-csv out-csv]
+  ;; Require setup to be run first
+  if (not is-boolean? initialized?) or (initialized? = false) [
+    user-message "Please click setup first to load data and initialize."
+    stop
+  ]
   ;; Resolve effective paths even if user didn't run setup
   let unco (ifelse-value (is-string? uncovered-dir and (length uncovered-dir > 0))
                [ uncovered-dir ]
@@ -117,6 +140,7 @@ to run-optimizer-both-constraints [python-exe uncovered-dir options-csv out-csv]
   if is-number? budget-max [ file-print (word "--budget-max=" budget-max) ]
   if is-number? co2-min [ file-print (word "--co2-min=" co2-min) ]
   file-print (word "--portfolios-out=" "data/outputs/solve_both_constraints.json")
+  file-print (word "--selections-out=" "data/outputs/solve_both_constraints_selections.csv")
   file-print (word "--table-out=" "data/outputs/solve_both_constraints_table.csv")
   file-print (word "--cost-res=" cost_RES)
   file-print (word "--co2-res=" co2_reduction_RES)
@@ -131,8 +155,25 @@ to run-optimizer-both-constraints [python-exe uncovered-dir options-csv out-csv]
   print (word "Running both-constraints with budget=" budget-max " and CO2 >= " co2-min)
   let _out shell:exec cmd
   if _out != "" [ print _out ]
+  adopt-or-popup "data/outputs/solve_both_constraints_selections.csv" (word "budget=" budget-max ", CO2 >= " co2-min)
 end
-to write-optimizer-budget-args [path uncovered-dir options-csv out-csv out-png budget_limit_value]
+
+to adopt-or-popup [sel-path mode-msg]
+  if not file-exists? sel-path [
+    user-message (word "No feasible solution found (" mode-msg "). Try adjusting limits or parameters.")
+    stop
+  ]
+  file-close-all
+  file-open sel-path
+  if file-at-end? [ file-close user-message (word "No feasible solution found (" mode-msg ").") stop ]
+  let _hdr csv:from-row file-read-line
+  if file-at-end? [ file-close user-message (word "No feasible solution found (" mode-msg ").") stop ]
+  file-close
+  adopt-selection-from-selections sel-path
+  print (word "Optimization finished (" mode-msg ")  Total Cost=" last-total-cost "  Total CO2=" last-total-co2)
+end
+
+to write-optimizer-budget-args [path uncovered-dir options-csv out-csv out-png budget_max_value]
   file-close-all
   if file-exists? path [ file-delete path ]
   file-open path
@@ -142,11 +183,10 @@ to write-optimizer-budget-args [path uncovered-dir options-csv out-csv out-png b
   file-print (word "--mode=max-co2-under-budget")
   ;; also persist metadata JSON for the chosen solution
   file-print (word "--portfolios-out=" "data/outputs/solve_under_budget.json")
+  file-print (word "--selections-out=" "data/outputs/solve_under_budget_selections.csv")
   ;; write detailed table CSV for the chosen solution
   file-print (word "--table-out=" "data/outputs/solve_under_budget_table.csv")
-  if is-number? budget_limit_value [
-    file-print (word "--budget-max=" budget_limit_value)
-  ]
+  if is-number? budget_max_value [ file-print (word "--budget-max=" budget_max_value) ]
   file-print (word "--cost-res=" cost_RES)
   file-print (word "--co2-res=" co2_reduction_RES)
   file-print (word "--cost-nbs=" cost_NBS)
@@ -156,6 +196,39 @@ to write-optimizer-budget-args [path uncovered-dir options-csv out-csv out-png b
   file-print (word "--max-pct-res=" max_pct_RES)
   file-print (word "--max-pct-nbs=" max_pct_NBS)
   file-close
+end
+
+to adopt-selection-from-selections [path]
+  ;; Ensure data tables are initialized (safe even if setup was already run)
+  if (not is-boolean? initialized?) [ setup ]
+  if initialized? = false [ setup ]
+  if not file-exists? path [ stop ]
+  file-close-all
+  file-open path
+  if file-at-end? [ file-close stop ]
+  let _header csv:from-row file-read-line
+  let portfolio []
+  while [ not file-at-end? ] [
+    let line file-read-line
+    if length line > 0 [
+      let row csv:from-row line
+      let rawid item 4 row
+      let mixid item 6 row
+      let resp  item 7 row
+      let nbsp  item 8 row
+      let bid (word rawid)
+      if not table:has-key? id-table bid [
+        if table:has-key? id-table (word bid ":ground") [ set bid (word bid ":ground") ]
+      ]
+      let opt (list mixid (as-number resp) (as-number nbsp) "")
+      set portfolio lput (list bid opt) portfolio
+    ]
+  ]
+  file-close
+  set last-portfolio portfolio
+  let tot compute-portfolio-totals portfolio
+  set last-total-cost item 0 tot
+  set last-total-co2  item 1 tot
 end
 
 to write-optimizer-args [path uncovered-dir options-csv budget-mode budget-steps out-csv out-png]
