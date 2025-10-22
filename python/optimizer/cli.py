@@ -37,8 +37,6 @@ def main() -> None:
     # OR-Tools budget frontier parameters (steps only)
     ap.add_argument('--budget-mode', choices=['steps'], default='steps', help='Budget sweep strategy (steps only)')
     ap.add_argument('--budget-steps', type=int, default=41, help='Number of budget samples (>=2)')
-    ap.add_argument('--refine-lexicographic', action='store_true', help='Minimize cost among max-CO2 plans (slower)')
-    ap.add_argument('--prune-frontier', action='store_true', help='Prune dominated points in the final frontier')
     ap.add_argument('--max-pct-res', type=float, default=100.0, help='Max % RES option allowed (0..100)')
     ap.add_argument('--max-pct-nbs', type=float, default=100.0, help='Max % NBS option allowed (0..100)')
 
@@ -87,8 +85,6 @@ def main() -> None:
         min_budget,
         max_budget,
         steps=max(args.budget_steps, 2),
-        refine_lexicographic=args.refine_lexicographic,
-        prune=args.prune_frontier,
     )
     # Convert back to floats
     points = [(c / scale.cost, z / scale.co2) for (c, z, _sel) in res]

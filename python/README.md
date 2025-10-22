@@ -17,9 +17,7 @@ Run
     - Unified file: `python -m optimizer.cli --uncovered-dir ../data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp --options ../data/csv/options.csv --budget-steps 41 --out ../data/outputs/pareto_uncovered_ortools.csv  --plot-out ../data/outputs/pareto_uncovered_ortools.png`
   - Save a plot of the frontier:
     - add `--plot-out ../data/outputs/pareto_uncovered_ortools.png` (optional `--plot-title "My Title"`)
-  - Performance knobs (both default OFF):
-    - Add `--refine-lexicographic` to minimize cost among max-CO2 solutions (slower; ensures cost-minimal tie-breaks).
-    - Add `--prune-frontier` to drop dominated points post-hoc (cheap; removes weakly dominated duplicates).
+  - The simplified optimizer uses a single-phase solve per budget without extra tie-breaking or pruning.
   
 
 Parameters (optional)

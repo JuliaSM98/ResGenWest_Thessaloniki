@@ -46,8 +46,6 @@ OUT_PNG="${OUT_PNG:-data/outputs/pareto_uncovered_ortools.png}"
 # Frontier settings (override via env)
 BUDGET_MODE="${BUDGET_MODE:-steps}"
 BUDGET_STEPS="${BUDGET_STEPS:-41}"
-REFINE="${REFINE:-0}"    # 1 to enable --refine-lexicographic
-PRUNE="${PRUNE:-0}"      # 1 to enable --prune-frontier
 
 mkdir -p "$(dirname "$OUT_CSV")"
 

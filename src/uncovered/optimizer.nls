@@ -1,6 +1,6 @@
 ;; Python optimizer integration and plotting (uncovered spaces)
 
-to run-optimizer-and-plot [python-exe uncovered-dir options-csv out-csv out-png budget-mode budget-steps refine-tie prune-frontier]
+to run-optimizer-and-plot [python-exe uncovered-dir options-csv out-csv out-png budget-mode budget-steps]
   ;; Resolve effective paths even if user didn't run setup
   let unco (ifelse-value (is-string? uncovered-dir and (length uncovered-dir > 0))
                [ uncovered-dir ]
@@ -22,7 +22,7 @@ to run-optimizer-and-plot [python-exe uncovered-dir options-csv out-csv out-png 
   print (word "Effective budget-steps=" bs)
 
   ;; write optimizer args from sliders so the script can pick them up and override defaults
-  write-optimizer-args "data/outputs/optimizer_args.txt" unco optp budget-mode bs refine-tie prune-frontier out-csv out-png
+  write-optimizer-args "data/outputs/optimizer_args.txt" unco optp budget-mode bs out-csv out-png
   ;; Execute wrapper script (it reads args from data/outputs/optimizer_args.txt)
   let cmd "scripts/run_optimizer.sh"
   print (word "Running script: " cmd " with uncovered=" unco " options=" optp " steps=" bs)
@@ -33,7 +33,7 @@ to run-optimizer-and-plot [python-exe uncovered-dir options-csv out-csv out-png 
   plot-optimizer-results out-csv "Cost vs CO2 (Python)"
 end
 
-to write-optimizer-args [path uncovered-dir options-csv budget-mode budget-steps refine-tie prune-frontier out-csv out-png]
+to write-optimizer-args [path uncovered-dir options-csv budget-mode budget-steps out-csv out-png]
   file-close-all
   if file-exists? path [ file-delete path ]
   file-open path
@@ -48,8 +48,6 @@ to write-optimizer-args [path uncovered-dir options-csv budget-mode budget-steps
              [ budget_steps ]
              [ ifelse-value (is-number? budget-steps) [ budget-steps ] [ 41 ] ])
   file-print (word "--budget-steps=" bs)
-  if refine-tie [ file-print "--refine-lexicographic" ]
-  if prune-frontier [ file-print "--prune-frontier" ]
   file-print (word "--cost-res=" cost_RES)
   file-print (word "--co2-res=" co2_reduction_RES)
   file-print (word "--cost-nbs=" cost_NBS)

@@ -57,20 +57,6 @@ def build_model(block_opts: Sequence[Sequence[IntPoint]], budget_int: Optional[i
     return model, x_vars, cost_expr, co2_expr
 
 
-def prune_points(points: List[Tuple[int, int, List[int]]]) -> List[Tuple[int, int, List[int]]]:
-    """Sort by cost asc and drop dominated points (keep strictly increasing CO2)."""
-    if not points:
-        return points
-    points.sort(key=lambda t: t[0])
-    pruned: List[Tuple[int, int, List[int]]] = []
-    best_co2 = -10**18
-    for c, z, sel in points:
-        if z > best_co2:
-            pruned.append((c, z, sel))
-            best_co2 = z
-    return pruned
-
-
 def _solve(model: cp_model.CpModel, x_vars: Sequence[Sequence[cp_model.IntVar]], cost_expr, co2_expr):
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = 10.0  # adjustable
@@ -89,38 +75,26 @@ def _solve(model: cp_model.CpModel, x_vars: Sequence[Sequence[cp_model.IntVar]],
     return solver.Value(cost_expr), solver.Value(co2_expr), selection
 
 
-def solve_max_co2_under_budget(block_opts: Sequence[Sequence[IntPoint]], budget_int: int, refine_lexicographic: bool = False):
-    """Maximize CO2 under budget. If refine_lexicographic=True, also minimize cost among max-CO2 solutions."""
-    # Step 1: maximize CO2
-    model1, x1, cost1, co21 = build_model(block_opts, budget_int=budget_int)
-    model1.Maximize(co21)
-    res1 = _solve(model1, x1, cost1, co21)
-    if res1 is None:
-        return None
-    if not refine_lexicographic:
-        return res1
-    _c1, z1, _sel1 = res1
-    # Step 2: minimize cost subject to CO2 == z1 and cost<=budget
-    model2, x2, cost2, co22 = build_model(block_opts, budget_int=budget_int)
-    model2.Add(co22 == z1)
-    model2.Minimize(cost2)
-    res2 = _solve(model2, x2, cost2, co22)
-    return res2
+def solve_max_co2_under_budget(block_opts: Sequence[Sequence[IntPoint]], budget_int: int):
+    """Maximize CO2 under a budget constraint (single-phase, no tie-breaking)."""
+    model, x, cost_expr, co2_expr = build_model(block_opts, budget_int=budget_int)
+    model.Maximize(co2_expr)
+    return _solve(model, x, cost_expr, co2_expr)
 
 
-def frontier_by_budget_steps(block_opts: Sequence[Sequence[IntPoint]], min_budget: int, max_budget: int, steps: int, *, refine_lexicographic: bool = False, prune: bool = False):
-    """Compute frontier by sampling budgets uniformly between [min_budget, max_budget]."""
+def frontier_by_budget_steps(block_opts: Sequence[Sequence[IntPoint]], min_budget: int, max_budget: int, steps: int):
+    """Compute frontier by sampling budgets uniformly in [min_budget, max_budget]."""
     if steps <= 1:
         steps = 2
     budgets = [int(round(min_budget + i * (max_budget - min_budget) / (steps - 1))) for i in range(steps)]
     seen = set()
     out: List[Tuple[int, int, List[int]]] = []
     for B in budgets:
-        res = solve_max_co2_under_budget(block_opts, B, refine_lexicographic=refine_lexicographic)
+        res = solve_max_co2_under_budget(block_opts, B)
         if res is None:
             continue
         c, z, sel = res
         if (c, z) not in seen:
             seen.add((c, z))
             out.append((c, z, sel))
-    return prune_points(out) if prune else out
+    return out
