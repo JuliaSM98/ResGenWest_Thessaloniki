@@ -19,8 +19,6 @@ to run-optimizer-and-plot [python-exe uncovered-dir options-csv out-csv out-png 
              [ ifelse-value (is-number? budget-steps) [ budget-steps ] [ 41 ] ])
 
   ;; Debug prints: show both the slider and the computed steps
-  if is-number? budget_steps [ print (word "Slider budget_steps=" budget_steps) ]
-  if is-number? budget-steps [ print (word "Arg budget-steps=" budget-steps) ]
   print (word "Effective budget-steps=" bs)
 
   ;; write optimizer args from sliders so the script can pick them up and override defaults
@@ -56,7 +54,7 @@ to write-optimizer-args [path uncovered-dir options-csv budget-mode budget-steps
   file-print (word "--co2-res=" co2_reduction_RES)
   file-print (word "--cost-nbs=" cost_NBS)
   file-print (word "--co2-nbs=" co2_reduction_NBS)
-  file-print (word "--pct-covered-by-trees=" pct_covered_by_NBS_RES)
+  file-print (word "--pct-covered-by-NBS-RES=" pct_covered_by_NBS_RES)
   file-print (word "--tree-cover-area=" tree_cover_area)
   file-print (word "--max-pct-res=" max_pct_RES)
   file-print (word "--max-pct-nbs=" max_pct_NBS)

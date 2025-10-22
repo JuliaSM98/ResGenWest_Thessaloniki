@@ -47,7 +47,7 @@ def main() -> None:
     ap.add_argument('--co2-res', type=float, default=48.0)
     ap.add_argument('--cost-nbs', type=float, default=600.0)
     ap.add_argument('--co2-nbs', type=float, default=25.0)
-    ap.add_argument('--pct-covered-by-trees', type=float, default=50.0)
+    ap.add_argument('--pct-covered-by-NBS-RES', type=float, default=50.0)
     ap.add_argument('--tree-cover-area', type=float, default=5.0)
 
     ap.add_argument('--portfolios-out', default=None, help='Optional JSON with per-run metadata')

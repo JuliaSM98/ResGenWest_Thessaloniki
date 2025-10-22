@@ -25,7 +25,7 @@ Run
 Parameters (optional)
 - `--cost-res`, `--co2-res`: €/m2 and kg/(m2·year) for RES.
 - `--cost-nbs`, `--co2-nbs`: €/tree and kg/(tree·year) for NBS.
-- `--pct-covered-by-trees`: % of the NBS area actually covered by trees (0–100).
+- `--pct-covered-by-NBS-RES`: % of the NBS area actually covered by trees (0–100).
 - `--tree-cover-area`: m2 occupied per tree.
 - `--max-pct-res`, `--max-pct-nbs`: upper bounds (0–100) on option res/nbs percentages to consider.
 

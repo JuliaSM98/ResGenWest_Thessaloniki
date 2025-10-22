@@ -25,6 +25,7 @@ globals [
   last-total-co2          ;; number: total CO2 of last iteration
   last-portfolio          ;; list: last computed portfolio [[bid opt] ...]
   print-tables            ;; switch-like flag to control table printing
+  budget_limit            ;; numeric limit used by find-best-under-budget
 
   ;; Editable paths (set here or via code)
   options-csv-path        ;; path to options.csv
@@ -33,6 +34,7 @@ globals [
   ;; Roof constraints used by sampler (define defaults here since we have no sliders)
   tree_weight
   max_roof_load
+  res_kw_per_m2
 ]
 
 to setup
@@ -58,7 +60,9 @@ to reset-defaults
   set cost_RES               240
   set co2_reduction_NBS      25
   set co2_reduction_RES      48
+  set res_kw_per_m2          0.2
   set print-tables           false
+  set budget_limit           1000000000
   ;; Paths
   set options-csv-path       "data/csv/options.csv"
   set shapefile-path         "data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp"
@@ -228,7 +232,8 @@ SLIDER
 564
 129
 pct_covered_by_NBS_RES
-pct_covered_by_NBS_RES0
+pct_covered_by_NBS_RES
+0
 100
 50.0
 1
