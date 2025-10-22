@@ -22,7 +22,7 @@ def scale_points(points: Sequence[Tuple[float, float]], scale: Scale) -> List[In
     return out
 
 
-def build_model(block_opts: Sequence[Sequence[IntPoint]], budget_int: Optional[int] = None):
+def build_model(block_opts: Sequence[Sequence[IntPoint]]):
     """Build a CP-SAT model for selecting exactly one option per block.
 
     - block_opts: per-block options as (cost_int, co2_int)
@@ -51,9 +51,6 @@ def build_model(block_opts: Sequence[Sequence[IntPoint]], budget_int: Optional[i
     cost_expr = sum(cost_terms)
     co2_expr = sum(co2_terms)
 
-    if budget_int is not None:
-        model.Add(cost_expr <= budget_int)
-
     return model, x_vars, cost_expr, co2_expr
 
 
@@ -77,10 +74,27 @@ def _solve(model: cp_model.CpModel, x_vars: Sequence[Sequence[cp_model.IntVar]],
 
 def solve_max_co2_under_budget(block_opts: Sequence[Sequence[IntPoint]], budget_int: int):
     """Maximize CO2 under a budget constraint (single-phase, no tie-breaking)."""
-    model, x, cost_expr, co2_expr = build_model(block_opts, budget_int=budget_int)
+    model, x, cost_expr, co2_expr = build_model(block_opts)
+    model.Add(cost_expr <= budget_int)
     model.Maximize(co2_expr)
     return _solve(model, x, cost_expr, co2_expr)
 
+
+def solve_min_cost_above_co2(block_opts: Sequence[Sequence[IntPoint]], co2_int_target: int):
+    """Minimize cost subject to CO2 >= co2_int_target."""
+    model, x, cost_expr, co2_expr = build_model(block_opts)
+    model.Add(co2_expr >= co2_int_target)
+    model.Minimize(cost_expr)
+    return _solve(model, x, cost_expr, co2_expr)
+
+
+def solve_both_constraints(block_opts: Sequence[Sequence[IntPoint]], budget_int: int, co2_int_target: int):
+    """Maximize CO2 subject to cost <= budget_int and CO2 >= co2_int_target."""
+    model, x, cost_expr, co2_expr = build_model(block_opts)
+    model.Add(cost_expr <= budget_int)
+    model.Add(co2_expr >= co2_int_target)
+    model.Maximize(co2_expr)
+    return _solve(model, x, cost_expr, co2_expr)
 
 def frontier_by_budget_steps(block_opts: Sequence[Sequence[IntPoint]], min_budget: int, max_budget: int, steps: int):
     """Compute frontier by sampling budgets uniformly in [min_budget, max_budget]."""

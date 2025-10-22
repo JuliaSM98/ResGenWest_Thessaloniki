@@ -393,8 +393,8 @@ SLIDER
 236
 771
 269
-budget_limit
-budget_limit
+budget_max
+budget_max
 0
 10000000
 1.0E7

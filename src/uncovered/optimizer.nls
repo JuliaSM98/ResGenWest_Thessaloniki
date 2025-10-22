@@ -33,7 +33,7 @@ to run-optimizer-and-plot [python-exe uncovered-dir options-csv out-csv out-png 
   plot-optimizer-results out-csv "Cost vs CO2 (Python)"
 end
 
-;; Single-solve: maximize CO2 under a budget (uses budget-limit slider)
+;; Single-solve: maximize CO2 under a budget (uses budget-max slider)
 to run-optimizer-under-budget-and-plot [python-exe uncovered-dir options-csv out-csv out-png]
   let unco (ifelse-value (is-string? uncovered-dir and (length uncovered-dir > 0))
                [ uncovered-dir ]
@@ -46,14 +46,92 @@ to run-optimizer-under-budget-and-plot [python-exe uncovered-dir options-csv out
                    [ options-csv-path ]
                    [ "data/csv/options.csv" ] ])
   ;; write args for single solve
-  write-optimizer-budget-args "data/outputs/optimizer_args.txt" unco optp out-csv out-png budget-limit
+  write-optimizer-budget-args "data/outputs/optimizer_args.txt" unco optp out-csv out-png budget-max
   let cmd "scripts/run_optimizer.sh"
-  print (word "Running single-solve under budget: " budget-limit)
+  print (word "Running single-solve under budget: " budget-max)
   let _out shell:exec cmd
   if _out != "" [ print _out ]
   plot-optimizer-results out-csv "Cost vs CO2 (Python)"
 end
 
+;; Single-solve: minimize cost subject to CO2 >= co2-min slider
+to run-optimizer-above-co2-and-save [python-exe uncovered-dir options-csv out-csv]
+  ;; Resolve effective paths even if user didn't run setup
+  let unco (ifelse-value (is-string? uncovered-dir and (length uncovered-dir > 0))
+               [ uncovered-dir ]
+               [ ifelse-value (is-string? shapefile-path and (length shapefile-path > 0))
+                   [ shapefile-path ]
+                   [ "data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp" ] ])
+  let optp (ifelse-value (is-string? options-csv and (length options-csv > 0))
+               [ options-csv ]
+               [ ifelse-value (is-string? options-csv-path and (length options-csv-path > 0))
+                   [ options-csv-path ]
+                   [ "data/csv/options.csv" ] ])
+  file-close-all
+  let argsf "data/outputs/optimizer_args.txt"
+  if file-exists? argsf [ file-delete argsf ]
+  file-open argsf
+  file-print (word "--uncovered-dir=" unco)
+  file-print (word "--options=" optp)
+  file-print (word "--out=" out-csv)
+  file-print (word "--mode=min-cost-above-co2")
+  if is-number? co2-min [ file-print (word "--co2-min=" co2-min) ]
+  file-print (word "--portfolios-out=" "data/outputs/solve_above_co2.json")
+  file-print (word "--table-out=" "data/outputs/solve_above_co2_table.csv")
+  file-print (word "--cost-res=" cost_RES)
+  file-print (word "--co2-res=" co2_reduction_RES)
+  file-print (word "--cost-nbs=" cost_NBS)
+  file-print (word "--co2-nbs=" co2_reduction_NBS)
+  file-print (word "--pct-covered-by-NBS-RES=" pct_covered_by_NBS_RES)
+  file-print (word "--tree-cover-area=" tree_cover_area)
+  file-print (word "--max-pct-res=" max_pct_RES)
+  file-print (word "--max-pct-nbs=" max_pct_NBS)
+  file-close
+  let cmd "scripts/run_optimizer.sh"
+  print (word "Running single-solve with CO2 >= " co2-min)
+  let _out shell:exec cmd
+  if _out != "" [ print _out ]
+end
+
+;; Single-solve: both constraints — maximize CO2 with cost<=budget-max and CO2>=co2-min
+to run-optimizer-both-constraints [python-exe uncovered-dir options-csv out-csv]
+  ;; Resolve effective paths even if user didn't run setup
+  let unco (ifelse-value (is-string? uncovered-dir and (length uncovered-dir > 0))
+               [ uncovered-dir ]
+               [ ifelse-value (is-string? shapefile-path and (length shapefile-path > 0))
+                   [ shapefile-path ]
+                   [ "data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp" ] ])
+  let optp (ifelse-value (is-string? options-csv and (length options-csv > 0))
+               [ options-csv ]
+               [ ifelse-value (is-string? options-csv-path and (length options-csv-path > 0))
+                   [ options-csv-path ]
+                   [ "data/csv/options.csv" ] ])
+  file-close-all
+  let argsf "data/outputs/optimizer_args.txt"
+  if file-exists? argsf [ file-delete argsf ]
+  file-open argsf
+  file-print (word "--uncovered-dir=" unco)
+  file-print (word "--options=" optp)
+  file-print (word "--out=" out-csv)
+  file-print (word "--mode=both-constraints")
+  if is-number? budget-max [ file-print (word "--budget-max=" budget-max) ]
+  if is-number? co2-min [ file-print (word "--co2-min=" co2-min) ]
+  file-print (word "--portfolios-out=" "data/outputs/solve_both_constraints.json")
+  file-print (word "--table-out=" "data/outputs/solve_both_constraints_table.csv")
+  file-print (word "--cost-res=" cost_RES)
+  file-print (word "--co2-res=" co2_reduction_RES)
+  file-print (word "--cost-nbs=" cost_NBS)
+  file-print (word "--co2-nbs=" co2_reduction_NBS)
+  file-print (word "--pct-covered-by-NBS-RES=" pct_covered_by_NBS_RES)
+  file-print (word "--tree-cover-area=" tree_cover_area)
+  file-print (word "--max-pct-res=" max_pct_RES)
+  file-print (word "--max-pct-nbs=" max_pct_NBS)
+  file-close
+  let cmd "scripts/run_optimizer.sh"
+  print (word "Running both-constraints with budget=" budget-max " and CO2 >= " co2-min)
+  let _out shell:exec cmd
+  if _out != "" [ print _out ]
+end
 to write-optimizer-budget-args [path uncovered-dir options-csv out-csv out-png budget_limit_value]
   file-close-all
   if file-exists? path [ file-delete path ]
@@ -67,7 +145,7 @@ to write-optimizer-budget-args [path uncovered-dir options-csv out-csv out-png b
   ;; write detailed table CSV for the chosen solution
   file-print (word "--table-out=" "data/outputs/solve_under_budget_table.csv")
   if is-number? budget_limit_value [
-    file-print (word "--budget-limit=" budget_limit_value)
+    file-print (word "--budget-max=" budget_limit_value)
   ]
   file-print (word "--cost-res=" cost_RES)
   file-print (word "--co2-res=" co2_reduction_RES)

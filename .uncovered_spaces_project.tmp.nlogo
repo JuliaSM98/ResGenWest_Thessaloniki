@@ -25,7 +25,7 @@ globals [
   last-total-co2          ;; number: total CO2 of last iteration
   last-portfolio          ;; list: last computed portfolio [[bid opt] ...]
   print-tables            ;; switch-like flag to control table printing
-  budget_limit            ;; numeric limit used by find-best-under-budget
+  budget_max            ;; numeric limit used by find-best-under-budget
 
   ;; Editable paths (set here or via code)
   options-csv-path        ;; path to options.csv
@@ -62,7 +62,7 @@ to reset-defaults
   set co2_reduction_RES      48
   set res_kw_per_m2          0.2
   set print-tables           false
-  set budget_limit           1000000000
+  set budget_max           1000000000
   ;; Paths
   set options-csv-path       "data/csv/options.csv"
   set shapefile-path         "data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp"
@@ -71,13 +71,13 @@ to reset-defaults
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-791
-10
-1395
-615
+998
+26
+1450
+479
 -1
 -1
-18.061
+13.455
 1
 10
 1
@@ -115,10 +115,10 @@ NIL
 1
 
 BUTTON
-217
-25
-326
-59
+95
+23
+204
+57
 Reset Params
 reset-defaults
 NIL
@@ -132,10 +132,10 @@ NIL
 1
 
 PLOT
-17
-322
-518
-594
+590
+207
+984
+479
 Cost vs CO2 (Python)
 Cost (€)
 CO2 (kg
@@ -150,11 +150,11 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot count turtles"
 
 BUTTON
-93
+214
 24
-211
+388
 57
-Run optimizer
+Run Cost vs CO2 curve
         run-optimizer-and-plot\n        \"python\"\n        shapefile-path\n        options-csv-path\n        \"data/outputs/pareto_uncovered_ortools.csv\"\n        \"data/outputs/pareto_uncovered_ortools.png\"\n        \"steps\"\n        41
 NIL
 1
@@ -295,32 +295,32 @@ budget_steps
 budget_steps
 2
 200
-17.0
+41.0
 1
 1
 steps
 HORIZONTAL
 
 SLIDER
-327
-243
-499
-276
-budget-limit
-budget-limit
+12
+268
+184
+301
+budget-max
+budget-max
 0
 10000000
-6.3694268E7
+4777070.0
 1
 1
 NIL
 HORIZONTAL
 
 BUTTON
-521
-249
-687
-282
+206
+272
+413
+307
 optimizer with budget
 run-optimizer-under-budget-and-plot\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/solve_under_budget.csv\"\n    \"data/outputs/solve_under_budget.png\"
 NIL
@@ -331,6 +331,75 @@ NIL
 NIL
 NIL
 NIL
+1
+
+SLIDER
+12
+309
+184
+342
+co2-min
+co2-min
+0
+1000000
+2101911.0
+1
+1
+kg
+HORIZONTAL
+
+BUTTON
+205
+312
+413
+345
+optimizer with CO2
+run-optimizer-above-co2-and-save\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/solve_above_co2.csv\"
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+206
+353
+414
+386
+optimizer with both
+run-optimizer-both-constraints\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/solve_both_constraints.csv\"
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+TEXTBOX
+22
+75
+172
+93
+Assumptions:
+11
+0.0
+1
+
+TEXTBOX
+18
+243
+168
+261
+Optimal solution:
+11
+0.0
 1
 
 @#$#@#$#@
