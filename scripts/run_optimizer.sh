@@ -41,7 +41,6 @@ PYTHON_BIN="$VENV_DIR/bin/python"
 UNCO_DIR="${UNCO_DIR:-data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp}"
 OPTIONS_CSV="${OPTIONS_CSV:-data/csv/options.csv}"
 OUT_CSV="${OUT_CSV:-data/outputs/pareto_uncovered_ortools.csv}"
-OUT_PNG="${OUT_PNG:-data/outputs/pareto_uncovered_ortools.png}"
 
 # Frontier settings (override via env)
 BUDGET_MODE="${BUDGET_MODE:-steps}"
@@ -55,8 +54,7 @@ export PYTHONPATH="$REPO_ROOT/python${PYTHONPATH:+:$PYTHONPATH}"
 args=( -m optimizer.cli \
   --uncovered-dir "$UNCO_DIR" \
   --options "$OPTIONS_CSV" \
-  --out "$OUT_CSV" \
-  --plot-out "$OUT_PNG" )
+  --out "$OUT_CSV" )
 
 
 # Append extra args from file (one token per line, use --flag=value form)

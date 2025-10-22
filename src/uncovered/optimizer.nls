@@ -33,6 +33,53 @@ to run-optimizer-and-plot [python-exe uncovered-dir options-csv out-csv out-png 
   plot-optimizer-results out-csv "Cost vs CO2 (Python)"
 end
 
+;; Single-solve: maximize CO2 under a budget (uses budget-limit slider)
+to run-optimizer-under-budget-and-plot [python-exe uncovered-dir options-csv out-csv out-png]
+  let unco (ifelse-value (is-string? uncovered-dir and (length uncovered-dir > 0))
+               [ uncovered-dir ]
+               [ ifelse-value (is-string? shapefile-path and (length shapefile-path > 0))
+                   [ shapefile-path ]
+                   [ "data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp" ] ])
+  let optp (ifelse-value (is-string? options-csv and (length options-csv > 0))
+               [ options-csv ]
+               [ ifelse-value (is-string? options-csv-path and (length options-csv-path > 0))
+                   [ options-csv-path ]
+                   [ "data/csv/options.csv" ] ])
+  ;; write args for single solve
+  write-optimizer-budget-args "data/outputs/optimizer_args.txt" unco optp out-csv out-png budget-limit
+  let cmd "scripts/run_optimizer.sh"
+  print (word "Running single-solve under budget: " budget-limit)
+  let _out shell:exec cmd
+  if _out != "" [ print _out ]
+  plot-optimizer-results out-csv "Cost vs CO2 (Python)"
+end
+
+to write-optimizer-budget-args [path uncovered-dir options-csv out-csv out-png budget_limit_value]
+  file-close-all
+  if file-exists? path [ file-delete path ]
+  file-open path
+  file-print (word "--uncovered-dir=" uncovered-dir)
+  file-print (word "--options=" options-csv)
+  file-print (word "--out=" out-csv)
+  file-print (word "--mode=max-co2-under-budget")
+  ;; also persist metadata JSON for the chosen solution
+  file-print (word "--portfolios-out=" "data/outputs/solve_under_budget.json")
+  ;; write detailed table CSV for the chosen solution
+  file-print (word "--table-out=" "data/outputs/solve_under_budget_table.csv")
+  if is-number? budget_limit_value [
+    file-print (word "--budget-limit=" budget_limit_value)
+  ]
+  file-print (word "--cost-res=" cost_RES)
+  file-print (word "--co2-res=" co2_reduction_RES)
+  file-print (word "--cost-nbs=" cost_NBS)
+  file-print (word "--co2-nbs=" co2_reduction_NBS)
+  file-print (word "--pct-covered-by-NBS-RES=" pct_covered_by_NBS_RES)
+  file-print (word "--tree-cover-area=" tree_cover_area)
+  file-print (word "--max-pct-res=" max_pct_RES)
+  file-print (word "--max-pct-nbs=" max_pct_NBS)
+  file-close
+end
+
 to write-optimizer-args [path uncovered-dir options-csv budget-mode budget-steps out-csv out-png]
   file-close-all
   if file-exists? path [ file-delete path ]
@@ -41,9 +88,7 @@ to write-optimizer-args [path uncovered-dir options-csv budget-mode budget-steps
   file-print (word "--uncovered-dir=" uncovered-dir)
   file-print (word "--options=" options-csv)
   file-print (word "--out=" out-csv)
-  file-print (word "--plot-out=" out-png)
-  ;; always use steps mode; determine step count from slider or param
-  file-print (word "--budget-mode=steps")
+  ;; Determine step count from slider or param (no budget-mode flag)
   let bs (ifelse-value (is-number? budget_steps)
              [ budget_steps ]
              [ ifelse-value (is-number? budget-steps) [ budget-steps ] [ 41 ] ])

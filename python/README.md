@@ -15,8 +15,6 @@ Run
   - Uniform budget steps between min and max cost (steps only):
     - Dir input: `python -m optimizer.cli --uncovered-dir ../data/shapefiles/uncovered_spaces --options ../data/csv/options.csv --budget-steps 41 --out ../data/outputs/pareto_uncovered_ortools.csv  --plot-out ../data/outputs/pareto_uncovered_ortools.png`
     - Unified file: `python -m optimizer.cli --uncovered-dir ../data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp --options ../data/csv/options.csv --budget-steps 41 --out ../data/outputs/pareto_uncovered_ortools.csv  --plot-out ../data/outputs/pareto_uncovered_ortools.png`
-  - Save a plot of the frontier:
-    - add `--plot-out ../data/outputs/pareto_uncovered_ortools.png` (optional `--plot-title "My Title"`)
   - The simplified optimizer uses a single-phase solve per budget without extra tie-breaking or pruning.
   
 
@@ -30,7 +28,6 @@ Parameters (optional)
 Outputs
 - CSV with Pareto points: columns `cost`, `co2`, `n_blocks`.
 - Metadata JSON via `--portfolios-out` containing: params, options, blocks (block ids and areas), selections (option index per block for each frontier point), and budget range.
- - PNG plot (if `--plot-out` is passed): Cost (€) on X, CO2 (kg) on Y, sorted by cost.
 
 Notes
 - All geometries inside a block share one decision; we aggregate block area first.
