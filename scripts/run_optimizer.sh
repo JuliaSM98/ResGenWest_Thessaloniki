@@ -61,4 +61,5 @@ for tok in "${args[@]}"; do
   esac
 done
 
+echo "Running: $PYTHON_BIN ${args[*]}"
 exec "$PYTHON_BIN" "${args[@]}"

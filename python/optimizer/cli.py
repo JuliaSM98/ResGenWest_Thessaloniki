@@ -26,7 +26,7 @@ def build_block_options(blocks, options, params: Params) -> Tuple[List[List[Tupl
         options_b = [o for o in options if o.cell_type == cell_type]
         opts = []
         for o in options_b:
-            c, z = compute_block_option_metrics(area, o.res_pct, o.nbs_pct, params)
+            c, z = compute_block_option_metrics(area, o.res_pct, o.nbs_pct, cell_type, params)
             opts.append((c, z))
         block_opts.append(opts)
         block_opt_refs.append(options_b)
@@ -68,12 +68,17 @@ def write_table_csv(path: str, blocks, block_options: List[List[Options]], selec
         for i, choice_idx in enumerate(selection):
             b = blocks[i]
             area = float(b['area_m2'])
+            cell_type = (b.get('cell_type') or '').strip().lower()
             o = block_options[i][choice_idx]
             res_pct = max(0.0, o.res_pct)
             nbs_pct = max(0.0, o.nbs_pct)
             res_area = area * cov * res_pct
             eff_nbs_area = area * cov * nbs_pct
             trees = int(eff_nbs_area // max(1e-9, params.tree_cover_area))
+            if cell_type == 'roof' and params.tree_weight > 0:
+                load_cap = int((eff_nbs_area * params.max_roof_load) // params.tree_weight)
+                if trees > load_cap:
+                    trees = load_cap
             nbs_co2 = trees * params.co2_nbs
             nbs_cost = trees * params.cost_nbs
             res_co2 = res_area * params.co2_res
@@ -159,6 +164,8 @@ def main() -> None:
     ap.add_argument('--co2-nbs', type=float, default=25.0)
     ap.add_argument('--pct-covered-by-NBS-RES', type=float, default=50.0)
     ap.add_argument('--tree-cover-area', type=float, default=5.0)
+    ap.add_argument('--tree-weight', type=float, default=400.0)
+    ap.add_argument('--max-roof-load', type=float, default=100.0)
 
     ap.add_argument('--budget-max', type=float, default=None, help='Budget limit in euros (required for max-co2-under-budget or both-constraints)')
     ap.add_argument('--co2-min', type=float, default=None, help='CO2 limit in kg (required for min-cost-above-co2 or both-constraints)')
@@ -178,6 +185,8 @@ def main() -> None:
         co2_nbs=args.co2_nbs,
         pct_covered_by_NBS_RES=args.pct_covered_by_NBS_RES,
         tree_cover_area=args.tree_cover_area,
+        tree_weight=args.tree_weight,
+        max_roof_load=args.max_roof_load,
     )
 
     blocks = load_uncovered_blocks(args.uncovered_dir)
