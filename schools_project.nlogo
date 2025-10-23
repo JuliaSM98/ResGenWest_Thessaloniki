@@ -1,8 +1,5 @@
-__includes [ "src/utils.nls" "src/csv_io.nls" "src/gis.nls" "src/catalogs.nls" "src/sampler.nls" "src/core.nls" "src/experiments.nls" ]
-
-extensions [gis table csv]
-
-breed [ markers marker ]
+__includes [ "src/utils.nls" "src/csv_io.nls" "src/gis.nls" "src/catalogs.nls" "src/sampler.nls" "src/core.nls" "src/experiments.nls" "src/uncovered/optimizer.nls" ]
+extensions [csv shell table gis]
 
 globals [
   ;; GIS
@@ -32,6 +29,7 @@ globals [
   ;; Editable paths (set here or via code)
   options-csv-path        ;; path to options.csv
   shapefile-path          ;; path to shapefile (.shp)
+
 ]
 
 to setup
@@ -68,6 +66,14 @@ to reset-defaults
   set co2_reduction_RES      48
   set print-tables           false
   set res_kw_per_m2          0.2
+  ;; Optimizer controls
+  set budget-max            10000000
+  set co2-min               0
+  ;; Paths
+  set options-csv-path       "data/csv/options.csv"
+  set shapefile-path         "data/shapefiles/schools/Schools_B_R_U.shp"
+  ;; Optimizer steps slider
+  if is-number? budget_steps [ set budget_steps 41 ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -138,23 +144,6 @@ BUTTON
 57
 Reset Params
 reset-defaults
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-453
-25
-635
-59
-Find under budget
-find-best-under-budget
 NIL
 1
 T
@@ -393,8 +382,8 @@ SLIDER
 236
 771
 269
-budget_max
-budget_max
+budget-max
+budget-max
 0
 10000000
 1.0E7
@@ -402,6 +391,122 @@ budget_max
 1
 €
 HORIZONTAL
+
+SLIDER
+13
+283
+185
+316
+co2-min
+co2-min
+0
+10000000
+0.0
+1
+1
+kg
+HORIZONTAL
+
+BUTTON
+193
+245
+400
+280
+optimizer with budget
+run-optimizer-under-budget-and-plot\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/solve_under_budget.csv\"\n    \"data/outputs/solve_under_budget.png\"
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+192
+285
+400
+318
+optimizer with CO2
+run-optimizer-above-co2-and-save\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/solve_above_co2.csv\"
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+407
+265
+541
+298
+optimizer with both
+run-optimizer-both-constraints\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/solve_both_constraints.csv\"
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+SLIDER
+14
+175
+186
+208
+budget_steps
+budget_steps
+2
+200
+41.0
+1
+1
+steps
+HORIZONTAL
+
+BUTTON
+214
+24
+388
+57
+Run Cost vs CO2 curve
+        run-optimizer-and-plot\n        \"python\"\n        shapefile-path\n        options-csv-path\n        \"data/outputs/pareto_uncovered_ortools.csv\"\n        \"data/outputs/pareto_uncovered_ortools.png\"\n        \"steps\"\n        41
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+PLOT
+691
+150
+1109
+403
+Cost vs CO2 (Python)
+Cost (€)
+CO2 (kg
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" ""
 
 CHOOSER
 958

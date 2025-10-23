@@ -32,10 +32,7 @@ to go-core
   if combo-index >= max-portfolios [ stop ]
 
   let portfolio portfolio-from-index combo-index
-  set last-portfolio portfolio
   let tot compute-portfolio-totals portfolio
-  set last-total-cost item 0 tot
-  set last-total-co2  item 1 tot
 
   ;; print current selection table (appears if an Output widget is present) when enabled via switch
   if print-tables [
@@ -68,59 +65,4 @@ to go-core
 
   set combo-index combo-index + 1
   tick
-end
-
-;; Find best solution under a budget limit: maximize CO2 with cost <= budget-max
-to find-best-under-budget
-  if not initialized? [ init-portfolio-sampler ]
-  if not is-number? budget-max [
-    user-message "Please set a numeric budget-max first."
-    stop
-  ]
-  let limit budget-max
-  let best-i -1
-  let best-portfolio []
-  let best-cost -1
-  let best-co2  -1
-  let i 0
-  while [ i < max-portfolios ] [
-    let p portfolio-from-index i
-    let tot compute-portfolio-totals p
-    let cst item 0 tot
-    let co2 item 1 tot
-    if (cst <= limit) [
-      if (co2 > best-co2) or ((co2 = best-co2) and (cst > best-cost)) [
-        set best-i i
-        set best-portfolio p
-        set best-cost cst
-        set best-co2  co2
-      ]
-    ]
-    set i i + 1
-  ]
-  if best-i < 0 [
-    user-message (word "No solution found under budget " limit ". Try increasing it.")
-    stop
-  ]
-  ;; Adopt best portfolio and update state/plots
-  set combo-index best-i
-  set last-portfolio best-portfolio
-  set last-total-cost best-cost
-  set last-total-co2  best-co2
-  if print-tables [ render-current-table best-portfolio ]
-  ;; Mark selection on plots
-  set-current-plot "Cost & CO2"
-  if not plot-pen-exists? "Cost" [ create-temporary-plot-pen "Cost" ]
-  set-current-plot-pen "Cost"
-  set-plot-pen-mode 2
-  plotxy (combo-index + 1) last-total-cost
-  set-current-plot-pen "CO2"
-  set-plot-pen-mode 2
-  plotxy (combo-index + 1) last-total-co2
-  set-current-plot "Cost vs CO2"
-  if not plot-pen-exists? "best" [ create-temporary-plot-pen "best" ]
-  set-current-plot-pen "best"
-  set-plot-pen-mode 2
-  set-plot-pen-color red
-  plotxy last-total-cost last-total-co2
 end
