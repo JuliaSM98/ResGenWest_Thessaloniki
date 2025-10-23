@@ -309,7 +309,7 @@ SLIDER
 budget-max
 budget-max
 0
-10000000
+100000000
 1.0E7
 1
 1

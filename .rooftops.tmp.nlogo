@@ -295,7 +295,7 @@ budget_steps
 budget_steps
 2
 200
-2.0
+41.0
 1
 1
 steps
@@ -342,7 +342,7 @@ co2-min
 co2-min
 0
 10000000
-509554.0
+0.0
 1
 1
 kg
@@ -456,7 +456,7 @@ MONITOR
 455
 Cost (€)
 cost-of-any selected-block
-0
+10
 1
 11
 

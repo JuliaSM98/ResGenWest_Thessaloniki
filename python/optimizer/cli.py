@@ -191,7 +191,7 @@ def main() -> None:
     block_opts, block_opt_refs = build_block_options(blocks, options, params)
 
     # OR-Tools scaling and integer points
-    scale = Scale(cost=1, co2=1)
+    scale = Scale(cost=1000, co2=1000)
     int_block_opts = [scale_points(opts, scale) for opts in block_opts]
 
     if args.mode == 'max-co2-under-budget':
