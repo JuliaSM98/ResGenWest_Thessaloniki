@@ -29,6 +29,7 @@ globals [
   ;; Editable paths (set here or via code)
   options-csv-path        ;; path to options.csv
   shapefile-path          ;; path to unified shapefile (.shp) or directory
+  outputs_base            ;; base folder for optimization outputs (e.g., data/outputs/uncovered_spaces)
 
   ;; Roof constraints used by sampler (define defaults here since we have no sliders)
   tree_weight
@@ -44,6 +45,7 @@ to setup
     set shapefile-path "data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp"
   ]
   setup-core options-csv-path shapefile-path
+  set outputs_base (word "data/outputs/uncovered_spaces")
 end
 
 to reset-defaults
@@ -59,6 +61,7 @@ to reset-defaults
   set co2_reduction_NBS      25
   set co2_reduction_RES      48
   set res_kw_per_m2          0.2
+  set outputs_base           "data/outputs/uncovered_spaces"
   set print-tables           false
   ;; Optimizer controls
   set budget-max            10000000
@@ -155,7 +158,7 @@ BUTTON
 388
 57
 Run Cost vs CO2 curve
-        run-optimizer-and-plot\n        \"python\"\n        shapefile-path\n        options-csv-path\n        \"data/outputs/pareto_uncovered_ortools.csv\"\n        \"data/outputs/pareto_uncovered_ortools.png\"\n        \"steps\"\n        41
+        run-optimizer-and-plot\n        \"python\"\n        shapefile-path\n        options-csv-path\n        \"data/outputs/uncovered_spaces/pareto_uncovered_ortools.csv\"\n        \"steps\"\n        41
 NIL
 1
 T
@@ -322,7 +325,7 @@ BUTTON
 400
 280
 optimizer with budget
-run-optimizer-under-budget-and-plot\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/solve_under_budget.csv\"\n    \"data/outputs/solve_under_budget.png\"
+run-optimizer-under-budget-and-plot\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/uncovered_spaces/solve_under_budget.csv\"
 NIL
 1
 T
@@ -354,7 +357,7 @@ BUTTON
 400
 318
 optimizer with CO2
-run-optimizer-above-co2-and-save\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/solve_above_co2.csv\"
+run-optimizer-above-co2-and-save\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/uncovered_spaces/solve_above_co2.csv\"
 NIL
 1
 T
@@ -371,7 +374,7 @@ BUTTON
 541
 298
 optimizer with both
-run-optimizer-both-constraints\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/solve_both_constraints.csv\"
+run-optimizer-both-constraints\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/uncovered_spaces/solve_both_constraints.csv\"
 NIL
 1
 T

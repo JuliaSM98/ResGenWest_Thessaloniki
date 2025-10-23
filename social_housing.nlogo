@@ -29,6 +29,7 @@ globals [
   ;; Editable paths (set here or via code)
   options-csv-path        ;; path to options.csv
   shapefile-path          ;; path to shapefile (.shp)
+  outputs_base            ;; base folder for optimization outputs (e.g., data/outputs/social_housing)
 
 ]
 
@@ -41,6 +42,7 @@ to setup
     set shapefile-path "data/shapefiles/social_housing/social_housing.shp"
   ]
   setup-core options-csv-path shapefile-path
+  set outputs_base (word "data/outputs/social_housing")
 end
 
 to reset-defaults
@@ -63,6 +65,7 @@ to reset-defaults
   ;; Paths
   set options-csv-path       "data/csv/options.csv"
   set shapefile-path         "data/shapefiles/social_housing/social_housing.shp"
+  set outputs_base           "data/outputs/social_housing"
   ;; Optimizer steps slider
   if is-number? budget_steps [ set budget_steps 41 ]
 end
@@ -152,7 +155,7 @@ BUTTON
 388
 57
 Run Cost vs CO2 curve
-        run-optimizer-and-plot\n        \"python\"\n        shapefile-path\n        options-csv-path\n        \"data/outputs/pareto_uncovered_ortools.csv\"\n        \"data/outputs/pareto_uncovered_ortools.png\"\n        \"steps\"\n        41
+        run-optimizer-and-plot\n        \"python\"\n        shapefile-path\n        options-csv-path\n        \"data/outputs/social_housing/pareto_uncovered_ortools.csv\"\n        \"steps\"\n        41
 NIL
 1
 T
@@ -319,7 +322,7 @@ BUTTON
 400
 280
 optimizer with budget
-run-optimizer-under-budget-and-plot\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/solve_under_budget.csv\"\n    \"data/outputs/solve_under_budget.png\"
+run-optimizer-under-budget-and-plot\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/social_housing/solve_under_budget.csv\"
 NIL
 1
 T
@@ -351,7 +354,7 @@ BUTTON
 400
 318
 optimizer with CO2
-run-optimizer-above-co2-and-save\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/solve_above_co2.csv\"
+run-optimizer-above-co2-and-save\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/social_housing/solve_above_co2.csv\"
 NIL
 1
 T
@@ -368,7 +371,7 @@ BUTTON
 541
 298
 optimizer with both
-run-optimizer-both-constraints\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/solve_both_constraints.csv\"
+run-optimizer-both-constraints\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/social_housing/solve_both_constraints.csv\"
 NIL
 1
 T

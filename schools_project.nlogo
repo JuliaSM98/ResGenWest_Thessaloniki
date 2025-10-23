@@ -29,6 +29,7 @@ globals [
   ;; Editable paths (set here or via code)
   options-csv-path        ;; path to options.csv
   shapefile-path          ;; path to shapefile (.shp)
+  outputs_base            ;; base folder for optimization outputs (e.g., data/outputs/schools)
 
 ]
 
@@ -41,6 +42,7 @@ to setup
     set shapefile-path "data/shapefiles/schools/Schools_B_R_U.shp"
   ]
   setup-core options-csv-path shapefile-path
+  set outputs_base (word "data/outputs/schools")
 end
 
 to go
@@ -72,6 +74,7 @@ to reset-defaults
   ;; Paths
   set options-csv-path       "data/csv/options.csv"
   set shapefile-path         "data/shapefiles/schools/Schools_B_R_U.shp"
+  set outputs_base           "data/outputs/schools"
   ;; Optimizer steps slider
   if is-number? budget_steps [ set budget_steps 41 ]
 end
@@ -413,7 +416,7 @@ BUTTON
 412
 281
 optimizer with budget
-run-optimizer-under-budget-and-plot\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/solve_under_budget.csv\"\n    \"data/outputs/solve_under_budget.png\"
+run-optimizer-under-budget-and-plot\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/schools/solve_under_budget.csv\"
 NIL
 1
 T
@@ -430,7 +433,7 @@ BUTTON
 414
 319
 optimizer with CO2
-run-optimizer-above-co2-and-save\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/solve_above_co2.csv\"
+run-optimizer-above-co2-and-save\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/schools/solve_above_co2.csv\"
 NIL
 1
 T
@@ -447,7 +450,7 @@ BUTTON
 558
 299
 optimizer with both
-run-optimizer-both-constraints\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/solve_both_constraints.csv\"
+run-optimizer-both-constraints\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/schools/solve_both_constraints.csv\"
 NIL
 1
 T
@@ -479,7 +482,7 @@ BUTTON
 630
 59
 Run Cost vs CO2 curve
-        run-optimizer-and-plot\n        \"python\"\n        shapefile-path\n        options-csv-path\n        \"data/outputs/pareto_uncovered_ortools.csv\"\n        \"data/outputs/pareto_uncovered_ortools.png\"\n        \"steps\"\n        41
+        run-optimizer-and-plot\n        \"python\"\n        shapefile-path\n        options-csv-path\n        \"data/outputs/schools/pareto_uncovered_ortools.csv\"\n        \"steps\"\n        41
 NIL
 1
 T
