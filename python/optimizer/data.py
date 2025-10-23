@@ -55,7 +55,6 @@ def load_uncovered_blocks(uncovered_path: str) -> List[Dict]:
                 props = feat.get('properties') or {}
                 pid = props.get('Id')
                 bno = props.get('B_Number')
-                key = f"{pid}.{bno}"
                 # accept numeric or string values; ignore missing
                 val_U = props.get('Area_U_m2')
                 Val_R = props.get('Area_R_m2')
@@ -76,6 +75,7 @@ def load_uncovered_blocks(uncovered_path: str) -> List[Dict]:
                         v = None
                 if v is None:
                     continue
+                key = f"{pid}.{bno}:{cell_type}"
                 accum[key] = accum.get(key, 0.0) + v
         for key, total_area in sorted(accum.items(), key=lambda kv: kv[0]):
             results.append({'block': key, 'area_m2': total_area, 'path': uncovered_path, 'cell_type': cell_type})
