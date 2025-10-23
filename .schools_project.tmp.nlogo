@@ -77,10 +77,10 @@ to reset-defaults
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-722
-198
-975
-452
+709
+138
+962
+392
 -1
 -1
 7.424242424242424
@@ -155,10 +155,10 @@ NIL
 1
 
 PLOT
-992
-388
-1347
-584
+991
+415
+1323
+611
 Cost & CO2
 Iteration
 Value
@@ -493,7 +493,7 @@ NIL
 PLOT
 991
 204
-1347
+1281
 384
 Cost vs CO2 (Python)
 Cost (€)
