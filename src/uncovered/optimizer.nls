@@ -284,6 +284,8 @@ to write-optimizer-args [path uncovered-dir options-csv budget-mode budget-steps
   file-print (word "--co2-nbs=" co2_reduction_NBS)
   file-print (word "--pct-covered-by-NBS-RES=" pct_covered_by_NBS_RES)
   file-print (word "--tree-cover-area=" tree_cover_area)
+  if is-number? tree_weight [ file-print (word "--tree-weight=" tree_weight) ]
+  if is-number? max_roof_load [ file-print (word "--max-roof-load=" max_roof_load) ]
   file-print (word "--max-pct-res=" max_pct_RES)
   file-print (word "--max-pct-nbs=" max_pct_NBS)
   file-close

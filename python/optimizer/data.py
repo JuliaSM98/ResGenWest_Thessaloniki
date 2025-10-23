@@ -78,7 +78,8 @@ def load_uncovered_blocks(uncovered_path: str) -> List[Dict]:
                 key = f"{pid}.{bno}:{cell_type}"
                 accum[key] = accum.get(key, 0.0) + v
         for key, total_area in sorted(accum.items(), key=lambda kv: kv[0]):
-            results.append({'block': key, 'area_m2': total_area, 'path': uncovered_path, 'cell_type': cell_type})
+            pid_bno, cell_type_b = key.rsplit(':', 1)
+            results.append({'block': key, 'area_m2': total_area, 'cell_type': cell_type_b})
         return results
 
     # Case 2: directory of Block_*.shp files (legacy mode)

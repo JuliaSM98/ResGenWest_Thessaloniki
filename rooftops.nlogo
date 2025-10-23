@@ -30,9 +30,6 @@ globals [
   options-csv-path        ;; path to options.csv
   shapefile-path          ;; path to unified shapefile (.shp) or directory
 
-  ;; Roof constraints used by sampler (define defaults here since we have no sliders)
-  tree_weight
-  max_roof_load
 ]
 
 to setup
@@ -71,10 +68,10 @@ to reset-defaults
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-1082
-34
-1441
-394
+1121
+41
+1480
+401
 -1
 -1
 10.64
@@ -132,10 +129,10 @@ NIL
 1
 
 PLOT
-652
-138
-1070
-391
+691
+150
+1109
+403
 Cost vs CO2 (Python)
 Cost (€)
 CO2 (kg
@@ -383,10 +380,10 @@ NIL
 1
 
 SLIDER
-202
-174
-374
-207
+190
+176
+362
+209
 res_kw_per_m2
 res_kw_per_m2
 0
@@ -513,6 +510,36 @@ Output:\n
 11
 0.0
 1
+
+SLIDER
+365
+178
+497
+211
+tree_weight
+tree_weight
+0
+1000
+400.0
+1
+1
+kg
+HORIZONTAL
+
+SLIDER
+502
+179
+667
+212
+max_roof_load
+max_roof_load
+10
+200
+100.0
+1
+1
+kg/m2
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?

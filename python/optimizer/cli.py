@@ -188,16 +188,20 @@ def main() -> None:
         tree_weight=args.tree_weight,
         max_roof_load=args.max_roof_load,
     )
-
+    print("Params:", params)
     blocks = load_uncovered_blocks(args.uncovered_dir)
+    print("Blocks:", blocks)
 
     options = load_ground_options(
         args.options,
         max_pct_res=args.max_pct_res / 100.0,
         max_pct_nbs=args.max_pct_nbs / 100.0,
     )
+    print("Options:", options)
 
     block_opts, block_opt_refs = build_block_options(blocks, options, params)
+    print("Block options (cost,co2):", block_opts)
+    print("Block option refs:", block_opt_refs)
 
     # OR-Tools scaling and integer points
     scale = Scale(cost=1000, co2=1000)
