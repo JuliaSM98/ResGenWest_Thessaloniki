@@ -5,12 +5,11 @@ to build-catalogs-from-csvs
   table:put options-by-type "roof"   []
   table:put options-by-type "ground" []
 
-  let c-mix_id  col-index options-header "mix_id"
   let c-type    col-index options-header "cell_type"
   let c-res     col-index options-header "res_pct"
   let c-nbs     col-index options-header "nbs_pct"
   let c-label   col-index options-header "label"
-  if (c-mix_id = -1 or c-type = -1 or c-res = -1 or c-nbs = -1 or c-label = -1) [ stop ]
+  if (c-type = -1 or c-res = -1 or c-nbs = -1 or c-label = -1) [ stop ]
 
   ;; Apply max percentage constraints from sliders (values are 0..100)
   let maxr (max_pct_RES / 100)
@@ -21,8 +20,7 @@ to build-catalogs-from-csvs
     let resf  (normalize-pct item c-res row)
     let nbsf  (normalize-pct item c-nbs row)
     if (resf <= maxr and nbsf <= maxn) [
-      let rec  (list (item c-mix_id row)
-                     resf
+      let rec  (list resf
                      nbsf
                      (item c-label  row))
       let lst table:get options-by-type typ

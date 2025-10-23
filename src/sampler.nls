@@ -36,8 +36,11 @@ to-report portfolio-key [portfolio]
   let parts []
   foreach portfolio [ p ->
     let bid   item 0 p
-    let mixid item 0 (item 1 p)
-    set parts lput (word bid ":" mixid) parts
+    let opt   item 1 p
+    let resv  item 0 opt
+    let nbsv  item 1 opt
+    ;; use percentages rounded to 2 decimals for key stability
+    set parts lput (word bid ":" (precision (resv * 100) 2) ":" (precision (nbsv * 100) 2)) parts
   ]
   set parts sort parts
   report join-with parts "|"
@@ -49,8 +52,8 @@ to-report compute-portfolio-totals [portfolio]
   foreach portfolio [ p ->
     let bid item 0 p
     let opt item 1 p
-    let res item 1 opt
-    let nbs item 2 opt
+    let res item 0 opt
+    let nbs item 1 opt
 
     let rec table:get id-table bid
     let area item 0 rec
@@ -113,7 +116,7 @@ to-report mix-for [bid]
   foreach last-portfolio [ p ->
     if (item 0 p) = bid [ set found (item 1 p) ]
   ]
-  report found  ;; [mix_id res nbs label] or nobody
+  report found  ;; [res nbs label] or nobody
 end
 
 to-report area-of [bid]
@@ -129,19 +132,19 @@ end
 to-report res-pct-of [bid]
   let m mix-for bid
   if m = nobody [ report 0 ]
-  report (item 1 m) * 100
+  report (item 0 m) * 100
 end
 
 to-report nbs-pct-of [bid]
   let m mix-for bid
   if m = nobody [ report 0 ]
-  report (item 2 m) * 100
+  report (item 1 m) * 100
 end
 
 to-report res-area-of [bid]
   let m mix-for bid
   if m = nobody [ report 0 ]
-  report (area-of bid) * (pct_covered_by_NBS_RES / 100) * (item 1 m)
+  report (area-of bid) * (pct_covered_by_NBS_RES / 100) * (item 0 m)
 end
 
 to-report trees-of [bid]
@@ -149,7 +152,7 @@ to-report trees-of [bid]
   if m = nobody [ report 0 ]
   let area area-of bid
   let ctyp celltype-of bid
-  let nbs  item 2 m
+  let nbs  item 1 m
   let eff_nbs_area (area * (pct_covered_by_NBS_RES / 100) * nbs)
   let trees (ifelse-value (tree_cover_area > 0) [ floor (eff_nbs_area / tree_cover_area) ] [ 0 ])
   if (ctyp = "roof") [
@@ -182,7 +185,7 @@ to-report total-res-area-current
     let m mix-for bid
     if m != nobody [
       let area area-of bid
-      let res  item 1 m
+      let res  item 0 m
       let cov (pct_covered_by_NBS_RES / 100)
       set total total + (area * cov * res)
     ]
@@ -209,7 +212,7 @@ to-report avg-res-pct
     let bid item 0 p
     let m mix-for bid
     if m != nobody [
-      set s s + ((item 1 m) * 100)
+      set s s + ((item 0 m) * 100)
       set n n + 1
     ]
   ]
@@ -226,7 +229,7 @@ to-report avg-nbs-pct
     let bid item 0 p
     let m mix-for bid
     if m != nobody [
-      set s s + ((item 2 m) * 100)
+      set s s + ((item 1 m) * 100)
       set n n + 1
     ]
   ]
@@ -265,8 +268,8 @@ to-report cost-of [bid]
   let rec  table:get id-table bid
   let area item 0 rec
   let ctyp item 1 rec
-  let res  item 1 m
-  let nbs  item 2 m
+  let res  item 0 m
+  let nbs  item 1 m
   let cov (pct_covered_by_NBS_RES / 100)
   ;; RES
   let res_area (area * cov * res)
@@ -294,8 +297,8 @@ to-report co2-of [bid]
   let rec  table:get id-table bid
   let area item 0 rec
   let ctyp item 1 rec
-  let res  item 1 m
-  let nbs  item 2 m
+  let res  item 0 m
+  let nbs  item 1 m
   let cov (pct_covered_by_NBS_RES / 100)
   ;; RES
   let res_area (area * cov * res)
@@ -368,9 +371,9 @@ to render-current-table [portfolio]
 
   foreach portfolio [ p ->
     let bid  item 0 p
-    let opt  item 1 p                 ;; [mix_id res nbs label]
-    let res  item 1 opt
-    let nbs  item 2 opt
+    let opt  item 1 p                 ;; [res nbs label]
+    let res  item 0 opt
+    let nbs  item 1 opt
     let rec  table:get id-table bid   ;; [area cell_type]
     let area item 0 rec
     let ctyp item 1 rec

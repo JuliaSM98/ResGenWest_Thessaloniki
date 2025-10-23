@@ -1,16 +1,22 @@
 ;; Core entrypoints: setup and go
 
 to setup-core [options-path-arg shapefile-path-arg]
+  ;; Preserve incoming paths across clear-all, then restore globals
+  let _sf shapefile-path-arg
+  let _opt options-path-arg
   clear-all
   clear-drawing
   ask patches [ set pcolor white ]
+  ;; Restore globals so buttons and helpers can read them after setup
+  set shapefile-path _sf
+  set options-csv-path _opt
 
   ;; Updated shapefile path (aggregates areas per block and cell type)
-  load-shapefile shapefile-path-arg
+  load-shapefile _sf
   build-id-table-from-dataset
   fit-and-draw-dataset
 
-  load-options-csv options-path-arg
+  load-options-csv _opt
   preview-csvs
 
   ;; NEW: build catalogs and sampler state

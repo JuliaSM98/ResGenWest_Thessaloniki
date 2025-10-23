@@ -4,7 +4,7 @@ import os
 from typing import List, Sequence, Tuple, Optional
 
 from .data import load_uncovered_blocks
-from .options import load_ground_options
+from .options import load_ground_options, Options
 from .model import Params, compute_block_option_metrics
 from .ortools_solver import (
     Scale,
@@ -16,16 +16,21 @@ from .ortools_solver import (
 )
 
 
-def build_block_options(blocks, options, params: Params) -> List[List[Tuple[float, float]]]:
+def build_block_options(blocks, options, params: Params) -> Tuple[List[List[Tuple[float, float]]], List[List[Options]]]:
+    """Return per-block numeric options and the matching per-block Options lists."""
     block_opts: List[List[Tuple[float, float]]] = []
+    block_opt_refs: List[List[Options]] = []
     for b in blocks:
         area = float(b['area_m2'])
+        cell_type = b.get('cell_type')
+        options_b = [o for o in options if o.cell_type == cell_type]
         opts = []
-        for o in options:
+        for o in options_b:
             c, z = compute_block_option_metrics(area, o.res_pct, o.nbs_pct, params)
             opts.append((c, z))
         block_opts.append(opts)
-    return block_opts
+        block_opt_refs.append(options_b)
+    return block_opts, block_opt_refs
 
 
 def write_csv(out_path: str, points: Sequence[Tuple[float, float]], n_blocks: int) -> None:
@@ -36,19 +41,19 @@ def write_csv(out_path: str, points: Sequence[Tuple[float, float]], n_blocks: in
             f.write(f"{c:.6f},{z:.6f},{n_blocks}\n")
 
 
-def write_selections_csv(path: str, solution_id: int, point: Tuple[float, float], blocks, options, selection: Sequence[int]) -> None:
+def write_selections_csv(path: str, solution_id: int, point: Tuple[float, float], blocks, block_options: List[List[Options]], selection: Sequence[int]) -> None:
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, 'w') as f:
-        f.write('solution_id,total_cost,total_co2,block_index,block_key,area_m2,mix_id,res_pct,nbs_pct\n')
+        f.write('solution_id,total_cost,total_co2,block_index,block_key,area_m2,res_pct,nbs_pct\n')
         for i, choice_idx in enumerate(selection):
             b = blocks[i]
-            o = options[choice_idx]
+            o = block_options[i][choice_idx]
             f.write(
-                f"{solution_id},{point[0]:.6f},{point[1]:.6f},{i},{b.get('block')},{float(b['area_m2']):.6f},{o.mix_id},{o.res_pct:.6f},{o.nbs_pct:.6f}\n"
+                f"{solution_id},{point[0]:.6f},{point[1]:.6f},{i},{b.get('block')},{float(b['area_m2']):.6f},{o.res_pct:.6f},{o.nbs_pct:.6f}\n"
             )
 
 
-def write_table_csv(path: str, blocks, options, selection: Sequence[int], params: Params) -> None:
+def write_table_csv(path: str, blocks, block_options: List[List[Options]], selection: Sequence[int], params: Params) -> None:
     """Write a detailed table matching NetLogo's render-current-table output."""
     os.makedirs(os.path.dirname(path), exist_ok=True)
     cov = max(0.0, min(100.0, params.pct_covered_by_NBS_RES)) / 100.0
@@ -63,7 +68,7 @@ def write_table_csv(path: str, blocks, options, selection: Sequence[int], params
         for i, choice_idx in enumerate(selection):
             b = blocks[i]
             area = float(b['area_m2'])
-            o = options[choice_idx]
+            o = block_options[i][choice_idx]
             res_pct = max(0.0, o.res_pct)
             nbs_pct = max(0.0, o.nbs_pct)
             res_area = area * cov * res_pct
@@ -102,7 +107,7 @@ def write_single_solution_outputs(
     *,
     args,
     blocks,
-    options,
+    block_options: List[List[Options]],
     params: Params,
     point: Tuple[float, float],
     selection: Sequence[int],
@@ -118,7 +123,8 @@ def write_single_solution_outputs(
             'mode': mode,
             'n_blocks': len(blocks),
             'params': params.__dict__,
-            'options': [o.__dict__ for o in options],
+            'options 1': [o.__dict__ for o in block_options[1]],
+            'options 2': [o.__dict__ for o in block_options[2]],
             'selection': list(selection),
             'blocks': blocks,
         }
@@ -128,10 +134,10 @@ def write_single_solution_outputs(
             json.dump(meta, f, indent=2)
     # per-block selection CSV (indices)
     if args.selections_out:
-        write_selections_csv(args.selections_out, 0, point, blocks, options, selection)
+        write_selections_csv(args.selections_out, 0, point, blocks, block_options, selection)
     # detailed table CSV
     if args.table_out:
-        write_table_csv(args.table_out, blocks, options, selection, params)
+        write_table_csv(args.table_out, blocks, block_options, selection, params)
 
 
 def main() -> None:
@@ -182,17 +188,19 @@ def main() -> None:
         max_pct_nbs=args.max_pct_nbs / 100.0,
     )
 
-    block_opts = build_block_options(blocks, options, params)
+    block_opts, block_opt_refs = build_block_options(blocks, options, params)
 
     # OR-Tools scaling and integer points
-    scale = Scale(cost=100, co2=100)
+    scale = Scale(cost=1, co2=1)
     int_block_opts = [scale_points(opts, scale) for opts in block_opts]
 
     if args.mode == 'max-co2-under-budget':
         if args.budget_max is None:
             raise SystemExit('--budget-max is required for mode=max-co2-under-budget')
         budget_int = int(round(args.budget_max * scale.cost))
+        print("Budget int", budget_int)
         sol = solve_max_co2_under_budget(int_block_opts, budget_int)
+        print ("Solution", sol)
         if sol is None:
             # No feasible solution
             write_csv(args.out, [], n_blocks=len(blocks))
@@ -200,7 +208,7 @@ def main() -> None:
             if args.selections_out:
                 os.makedirs(os.path.dirname(args.selections_out), exist_ok=True)
                 with open(args.selections_out, 'w') as f:
-                    f.write('solution_id,total_cost,total_co2,block_index,block_key,area_m2,mix_id,res_pct,nbs_pct\n')
+                    f.write('solution_id,total_cost,total_co2,block_index,block_key,area_m2,res_pct,nbs_pct\n')
             if args.table_out:
                 os.makedirs(os.path.dirname(args.table_out), exist_ok=True)
                 with open(args.table_out, 'w') as f:
@@ -211,7 +219,7 @@ def main() -> None:
         write_single_solution_outputs(
             args=args,
             blocks=blocks,
-            options=options,
+            block_options=block_opt_refs,
             params=params,
             point=point,
             selection=sel,
@@ -224,13 +232,15 @@ def main() -> None:
         if args.co2_min is None:
             raise SystemExit('--co2-min is required for mode=min-cost-above-co2')
         co2_int = int(round(args.co2_min * scale.co2))
+        print("CO2 int", co2_int)
         sol = solve_min_cost_above_co2(int_block_opts, co2_int)
+        print ("Solution", sol)
         if sol is None:
             write_csv(args.out, [], n_blocks=len(blocks))
             if args.selections_out:
                 os.makedirs(os.path.dirname(args.selections_out), exist_ok=True)
                 with open(args.selections_out, 'w') as f:
-                    f.write('solution_id,total_cost,total_co2,block_index,block_key,area_m2,mix_id,res_pct,nbs_pct\n')
+                    f.write('solution_id,total_cost,total_co2,block_index,block_key,area_m2,res_pct,nbs_pct\n')
             if args.table_out:
                 os.makedirs(os.path.dirname(args.table_out), exist_ok=True)
                 with open(args.table_out, 'w') as f:
@@ -241,7 +251,7 @@ def main() -> None:
         write_single_solution_outputs(
             args=args,
             blocks=blocks,
-            options=options,
+            block_options=block_opt_refs,
             params=params,
             point=point,
             selection=sel,
@@ -261,7 +271,7 @@ def main() -> None:
             if args.selections_out:
                 os.makedirs(os.path.dirname(args.selections_out), exist_ok=True)
                 with open(args.selections_out, 'w') as f:
-                    f.write('solution_id,total_cost,total_co2,block_index,block_key,area_m2,mix_id,res_pct,nbs_pct\n')
+                    f.write('solution_id,total_cost,total_co2,block_index,block_key,area_m2,res_pct,nbs_pct\n')
             if args.table_out:
                 os.makedirs(os.path.dirname(args.table_out), exist_ok=True)
                 with open(args.table_out, 'w') as f:
@@ -272,7 +282,7 @@ def main() -> None:
         write_single_solution_outputs(
             args=args,
             blocks=blocks,
-            options=options,
+            block_options=block_opt_refs,
             params=params,
             point=point,
             selection=sel,
@@ -298,7 +308,7 @@ def main() -> None:
         'budget_steps': args.budget_steps,
         'n_blocks': len(blocks),
         'params': params.__dict__,
-        'options': [o.__dict__ for o in options],
+        'block_options': [[o.__dict__ for o in opts] for opts in block_opt_refs],
         'selections': selections,
         'min_budget': min_budget / scale.cost,
         'max_budget': max_budget / scale.cost,

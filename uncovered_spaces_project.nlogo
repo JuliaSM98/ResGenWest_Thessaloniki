@@ -13,7 +13,7 @@ globals [
   assumptions-rows
 
   ;; catalogs / sampler state
-  options-by-type         ;; table: "roof"/"ground" -> list of option records [mix_id res nbs label]
+  options-by-type         ;; table: "roof"/"ground" -> list of option records [res nbs label]
   intensities             ;; table: action_id -> [cost_per_m2 co2_per_m2]
   blocks-ordered          ;; stable list of block IDs (order we sample)
   visited-portfolios      ;; table: key-string -> [total-cost total-co2]

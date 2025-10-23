@@ -37,34 +37,28 @@ fi
 
 PYTHON_BIN="$VENV_DIR/bin/python"
 
-# Inputs (customize as needed or override via env)
-UNCO_DIR="${UNCO_DIR:-data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp}"
-OPTIONS_CSV="${OPTIONS_CSV:-data/csv/options.csv}"
-OUT_CSV="${OUT_CSV:-data/outputs/pareto_uncovered_ortools.csv}"
-
-# Frontier settings (override via env)
-BUDGET_MODE="${BUDGET_MODE:-steps}"
-BUDGET_STEPS="${BUDGET_STEPS:-41}"
-
-mkdir -p "$(dirname "$OUT_CSV")"
-
 # Ensure Python can import the optimizer package
 export PYTHONPATH="$REPO_ROOT/python${PYTHONPATH:+:$PYTHONPATH}"
 
-args=( -m optimizer.cli \
-  --uncovered-dir "$UNCO_DIR" \
-  --options "$OPTIONS_CSV" \
-  --out "$OUT_CSV" )
-
-
-# Append extra args from file (one token per line, use --flag=value form)
+# Read all CLI args from NetLogo-generated file to avoid hardcoded paths
 EXTRA_ARGS_FILE="$REPO_ROOT/data/outputs/optimizer_args.txt"
-if [[ -f "$EXTRA_ARGS_FILE" ]]; then
-  while IFS= read -r line; do
-    [[ -z "$line" ]] && continue
-    [[ "$line" =~ ^# ]] && continue
-    args+=( "$line" )
-  done < "$EXTRA_ARGS_FILE"
+if [[ ! -f "$EXTRA_ARGS_FILE" ]]; then
+  echo "ERROR: Missing $EXTRA_ARGS_FILE. Run setup and the optimizer button in NetLogo first." >&2
+  exit 1
 fi
+
+args=( -m optimizer.cli )
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  [[ "$line" =~ ^# ]] && continue
+  args+=( "$line" )
+done < "$EXTRA_ARGS_FILE"
+
+# Ensure output directory exists if --out=... is provided
+for tok in "${args[@]}"; do
+  case "$tok" in
+    --out=*) out_path="${tok#--out=}"; mkdir -p "$(dirname "$out_path")" ;;
+  esac
+done
 
 exec "$PYTHON_BIN" "${args[@]}"

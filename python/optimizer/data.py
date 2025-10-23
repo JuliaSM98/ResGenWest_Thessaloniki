@@ -57,8 +57,15 @@ def load_uncovered_blocks(uncovered_path: str) -> List[Dict]:
                 bno = props.get('B_Number')
                 key = f"{pid}.{bno}"
                 # accept numeric or string values; ignore missing
-                val = props.get('Area_U_m2')
+                val_U = props.get('Area_U_m2')
+                Val_R = props.get('Area_R_m2')
                 v = None
+                if val_U is not None and val_U != '':
+                    val = val_U
+                    cell_type = 'ground'
+                elif Val_R is not None and Val_R != '':
+                    val = Val_R
+                    cell_type = 'roof'
                 if isinstance(val, (int, float)):
                     v = float(val)
                 else:
@@ -71,7 +78,7 @@ def load_uncovered_blocks(uncovered_path: str) -> List[Dict]:
                     continue
                 accum[key] = accum.get(key, 0.0) + v
         for key, total_area in sorted(accum.items(), key=lambda kv: kv[0]):
-            results.append({'block': key, 'area_m2': total_area, 'path': uncovered_path})
+            results.append({'block': key, 'area_m2': total_area, 'path': uncovered_path, 'cell_type': cell_type})
         return results
 
     # Case 2: directory of Block_*.shp files (legacy mode)

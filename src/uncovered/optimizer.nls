@@ -9,9 +9,11 @@ to run-optimizer-and-plot [python-exe uncovered-dir options-csv out-csv out-png 
   ;; Resolve effective paths even if user didn't run setup
   let unco (ifelse-value (is-string? uncovered-dir and (length uncovered-dir > 0))
                [ uncovered-dir ]
-               [ ifelse-value (is-string? shapefile-path and (length shapefile-path > 0))
-                   [ shapefile-path ]
-                   [ "data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp" ] ])
+               [ shapefile-path ])
+  if (not is-string? unco) or (length unco = 0) [
+    user-message "Please set shapefile-path in the Code tab (and click setup) before running the optimizer."
+    stop
+  ]
   let optp (ifelse-value (is-string? options-csv and (length options-csv > 0))
                [ options-csv ]
                [ ifelse-value (is-string? options-csv-path and (length options-csv-path > 0))
@@ -47,9 +49,11 @@ to run-optimizer-under-budget-and-plot [python-exe uncovered-dir options-csv out
   ]
   let unco (ifelse-value (is-string? uncovered-dir and (length uncovered-dir > 0))
                [ uncovered-dir ]
-               [ ifelse-value (is-string? shapefile-path and (length shapefile-path > 0))
-                   [ shapefile-path ]
-                   [ "data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp" ] ])
+               [ shapefile-path ])
+  if (not is-string? unco) or (length unco = 0) [
+    user-message "Please set shapefile-path in the Code tab (and click setup) before running the optimizer."
+    stop
+  ]
   let optp (ifelse-value (is-string? options-csv and (length options-csv > 0))
                [ options-csv ]
                [ ifelse-value (is-string? options-csv-path and (length options-csv-path > 0))
@@ -75,9 +79,11 @@ to run-optimizer-above-co2-and-save [python-exe uncovered-dir options-csv out-cs
   ;; Resolve effective paths even if user didn't run setup
   let unco (ifelse-value (is-string? uncovered-dir and (length uncovered-dir > 0))
                [ uncovered-dir ]
-               [ ifelse-value (is-string? shapefile-path and (length shapefile-path > 0))
-                   [ shapefile-path ]
-                   [ "data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp" ] ])
+               [ shapefile-path ])
+  if (not is-string? unco) or (length unco = 0) [
+    user-message "Please set shapefile-path in the Code tab (and click setup) before running the optimizer."
+    stop
+  ]
   let optp (ifelse-value (is-string? options-csv and (length options-csv > 0))
                [ options-csv ]
                [ ifelse-value (is-string? options-csv-path and (length options-csv-path > 0))
@@ -121,9 +127,11 @@ to run-optimizer-both-constraints [python-exe uncovered-dir options-csv out-csv]
   ;; Resolve effective paths even if user didn't run setup
   let unco (ifelse-value (is-string? uncovered-dir and (length uncovered-dir > 0))
                [ uncovered-dir ]
-               [ ifelse-value (is-string? shapefile-path and (length shapefile-path > 0))
-                   [ shapefile-path ]
-                   [ "data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp" ] ])
+               [ shapefile-path ])
+  if (not is-string? unco) or (length unco = 0) [
+    user-message "Please set shapefile-path in the Code tab (and click setup) before running the optimizer."
+    stop
+  ]
   let optp (ifelse-value (is-string? options-csv and (length options-csv > 0))
                [ options-csv ]
                [ ifelse-value (is-string? options-csv-path and (length options-csv-path > 0))
@@ -205,6 +213,7 @@ to adopt-selection-from-selections [path]
   if not file-exists? path [ stop ]
   file-close-all
   file-open path
+  print (word "Adopting selection from " path)
   if file-at-end? [ file-close stop ]
   let _header csv:from-row file-read-line
   let portfolio []
@@ -213,14 +222,13 @@ to adopt-selection-from-selections [path]
     if length line > 0 [
       let row csv:from-row line
       let rawid item 4 row
-      let mixid item 6 row
-      let resp  item 7 row
-      let nbsp  item 8 row
+      let resp  item 6 row
+      let nbsp  item 7 row
       let bid (word rawid)
       if not table:has-key? id-table bid [
-        if table:has-key? id-table (word bid ":ground") [ set bid (word bid ":ground") ]
+        set bid (resolve-key-by-type bid)
       ]
-      let opt (list mixid (as-number resp) (as-number nbsp) "")
+      let opt (list (as-number resp) (as-number nbsp) "")
       set portfolio lput (list bid opt) portfolio
     ]
   ]
@@ -229,6 +237,28 @@ to adopt-selection-from-selections [path]
   let tot compute-portfolio-totals portfolio
   set last-total-cost item 0 tot
   set last-total-co2  item 1 tot
+end
+
+;; Resolve a raw block id to an id-table key, preferring :roof or :ground when present.
+to-report resolve-key-by-type [raw]
+  let k (word raw)
+  if (id-table = nobody) [ report k ]
+  if table:has-key? id-table k [ report k ]
+  ;; Try explicit suffixes first (prefer :roof for rooftops models)
+  if table:has-key? id-table (word k ":roof") [ report (word k ":roof") ]
+  if table:has-key? id-table (word k ":ground") [ report (word k ":ground") ]
+  ;; Normalize pattern "X.Block_N" -> "X.N" and try again
+  let tag ".Block_"
+  let pos position tag k
+  if pos != false [
+    let left_elem substring k 0 pos
+    let right_elem substring k (pos + length tag) (length k)
+    let base (word left_elem "." right_elem)
+    if table:has-key? id-table (word base ":roof")   [ report (word base ":roof") ]
+    if table:has-key? id-table (word base ":ground") [ report (word base ":ground") ]
+    if table:has-key? id-table base [ report base ]
+  ]
+  report k
 end
 
 to write-optimizer-args [path uncovered-dir options-csv budget-mode budget-steps out-csv out-png]
