@@ -1,8 +1,8 @@
-Python Optimizer for Pareto Front (Uncovered Spaces)
+Python Optimizer for Pareto Front (Unified Shapefile)
 
 Overview
-- Goal: compute Pareto-efficient portfolios over uncovered space blocks by choosing one of the ground options per block to trade off total Cost (€) vs CO2 (kg).
-- Data: reads uncovered blocks either from a directory of `Block_*.shp` (summing `Area_Uncov` per block) or from a single unified shapefile (e.g., `data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp`) with columns `Id`, `B_Number`, and `Area_U_m2` (summing per `Id.B_Number`). Uses `data/csv/options.csv` (filters `cell_type=ground`).
+- Goal: compute Pareto-efficient portfolios over blocks by choosing one option per block to trade off total Cost (€) vs CO2 (kg).
+- Data: reads a single unified shapefile (e.g., `data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp`) with columns `Id`, `B_Number`, and one or both of `Area_U_m2` (ground) and `Area_R_m2` (roof). Aggregates areas per `Id.B_Number` and cell type. Uses `data/csv/options.csv` (filtered by `cell_type`).
 - Assumptions: one option per block; cost/CO2 intensities and tree layout parameters mirror the NetLogo sliders.
 
 Install
@@ -13,8 +13,7 @@ Install
 Run
 - OR-Tools budget frontier (maximize CO2 for each budget):
   - Uniform budget steps between min and max cost (steps only):
-    - Dir input: `python -m optimizer.cli --uncovered-dir ../data/shapefiles/uncovered_spaces --options ../data/csv/options.csv --budget-steps 41 --out ../data/outputs/pareto_uncovered_ortools.csv  --plot-out ../data/outputs/pareto_uncovered_ortools.png`
-    - Unified file: `python -m optimizer.cli --uncovered-dir ../data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp --options ../data/csv/options.csv --budget-steps 41 --out ../data/outputs/pareto_uncovered_ortools.csv  --plot-out ../data/outputs/pareto_uncovered_ortools.png`
+    - `python -m optimizer.cli --uncovered-dir ../data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp --options ../data/csv/options.csv --budget-steps 41 --out ../data/outputs/pareto_uncovered_ortools.csv`
   - The simplified optimizer uses a single-phase solve per budget without extra tie-breaking or pruning.
   
 
@@ -30,5 +29,5 @@ Outputs
 - Metadata JSON via `--portfolios-out` containing: params, options, blocks (block ids and areas), selections (option index per block for each frontier point), and budget range.
 
 Notes
-- All geometries inside a block share one decision; we aggregate block area first.
+- All geometries inside a block share one decision; we aggregate block area first per cell type (`roof`/`ground`).
 - OR-Tools mode uses CP-SAT with integer-scaled costs/CO2 (cents and 0.01 kg) to maximize `CO2` under a budget.

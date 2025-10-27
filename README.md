@@ -19,10 +19,8 @@ Repo Structure
 - `src/catalogs.nls` — build option catalogs and cost/CO2 intensity tables.
 - `src/sampler.nls` — portfolio sampler/enumerator, keying, totals computation, annotation.
 - `src/core.nls` — orchestration for `setup` and `go`.
-- `src/experiments.nls` — placeholder for BehaviorSpace helpers.
 - `data/csv/` — input CSVs (`options.csv`, `cost_co2_assumptions.csv`).
 - `data/shapefiles/` — GIS data for the study area.
-- `run.sh` — headless wrapper for BehaviorSpace runs.
 
 Setup
 - Install NetLogo (6.3+ recommended). Ensure extensions `gis`, `table`, and `csv` are available.
@@ -34,13 +32,6 @@ Setup
 Run (GUI)
 - Open `schools_project.nlogo` in NetLogo.
 - In the Interface tab, click `setup` then `go` to enumerate/sample and plot portfolios.
-
-Run (Headless)
-- Define a BehaviorSpace experiment in the `.nlogo` (e.g., `smoke`).
-- Use the wrapper script:
-  - `./run.sh` — runs `MODEL=schools_project.nlogo` and `EXP=smoke`, writes `last_run.csv`.
-  - `MODEL=schools_project.nlogo EXP=my-experiment ./run.sh`
-  - `NETLOGO=/path/to/netlogo-headless.sh ./run.sh`
 
 Data Schemas
 - `options.csv` (one row per feasible mix):
@@ -64,9 +55,8 @@ Data Schemas
 Notes and Assumptions
 - The GIS reader aggregates areas across multiple geometries; empty or missing area attributes are treated as zero.
 - Options are selected per cell type (`roof`/`ground`) and applied to the corresponding aggregated area.
-- The plots show raw totals; extend with normalization, constraints, or filtering in `src/experiments.nls` as needed.
+- The plots show raw totals; extend with normalization, constraints, or filtering as needed.
 
 Extending
 - Add new actions or cell types by updating the CSVs and, if needed, the lookup logic in `src/sampler.nls`.
-- Implement experiment‑specific logic in `src/experiments.nls` and reference via BehaviorSpace.
 - Consider filling in the documentation blocks inside `schools_project.nlogo` (WHAT IS IT, HOW IT WORKS, etc.) to align with course deliverables.

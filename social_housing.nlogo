@@ -1,4 +1,4 @@
-__includes [ "src/utils.nls" "src/csv_io.nls" "src/gis.nls" "src/catalogs.nls" "src/sampler.nls" "src/core.nls" "src/experiments.nls" "src/uncovered/optimizer.nls" ]
+__includes [ "src/utils.nls" "src/csv_io.nls" "src/gis.nls" "src/catalogs.nls" "src/sampler.nls" "src/core.nls" "src/optimizer.nls" ]
 extensions [csv shell table gis]
 
 globals [
