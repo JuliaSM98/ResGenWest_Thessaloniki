@@ -1,8 +1,8 @@
-Python Optimizer for Pareto Front (Unified Shapefile)
+Python Optimizer for Pareto Front
 
 Overview
 - Goal: compute Pareto-efficient portfolios over blocks by choosing one option per block to trade off total Cost (€) vs CO2 (kg).
-- Data: reads a single unified shapefile (e.g., `data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp`) with columns `Id`, `B_Number`, and one or both of `Area_U_m2` (ground) and `Area_R_m2` (roof). Aggregates areas per `Id.B_Number` and cell type. Uses `data/csv/options.csv` (filtered by `cell_type`).
+- Data: reads a unified shapefile (e.g., `data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp`) with columns `Id`, `B_Number`, and one or both of `Area_U_m2` (ground) and `Area_R_m2` (roof). Aggregates areas per `Id.B_Number` and cell type. Uses `data/csv/options.csv` (filtered by `cell_type`).
 - Assumptions: one option per block; cost/CO2 intensities and tree layout parameters mirror the NetLogo sliders.
 
 Install

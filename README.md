@@ -19,6 +19,7 @@ Repo Structure
 - `src/catalogs.nls` — build option catalogs and cost/CO2 intensity tables.
 - `src/sampler.nls` — portfolio sampler/enumerator, keying, totals computation, annotation.
 - `src/core.nls` — orchestration for `setup` and `go`.
+- `src/optimizer.nls` — helpers to run the Python optimizer and plot results.
 - `data/csv/` — input CSVs (`options.csv`, `cost_co2_assumptions.csv`).
 - `data/shapefiles/` — GIS data for the study area.
 
