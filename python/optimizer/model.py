@@ -6,7 +6,7 @@ from typing import Tuple
 class Params:
     # RES intensities (per m2)
     cost_res: float = 240.0
-    co2_res: float = 48.0
+    co2_res: float = 71.0
     # NBS intensities (per tree)
     cost_nbs: float = 600.0
     co2_nbs: float = 25.0

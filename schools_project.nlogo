@@ -65,7 +65,7 @@ to reset-defaults
   set cost_NBS               600
   set cost_RES               240
   set co2_reduction_NBS      25
-  set co2_reduction_RES      48
+  set co2_reduction_RES      71
   set print-tables           false
   set res_kw_per_m2          0.2
   ;; Optimizer controls
@@ -80,13 +80,13 @@ to reset-defaults
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-722
-198
-975
-452
+615
+253
+937
+576
 -1
 -1
-7.424242424242424
+9.52
 1
 10
 1
@@ -319,7 +319,7 @@ co2_reduction_RES
 co2_reduction_RES
 0
 100
-48.0
+71.0
 1
 1
 kg/(m2·year)
@@ -389,7 +389,7 @@ budget-max
 budget-max
 0
 10000000
-1.0E7
+1919000.0
 1000
 1
 €
@@ -522,10 +522,10 @@ selected-block
 0
 
 MONITOR
-14
-401
-84
-446
+194
+445
+296
+490
 Area m2
 area-of-any selected-block
 17
@@ -533,10 +533,10 @@ area-of-any selected-block
 11
 
 MONITOR
-89
-401
-175
-446
+301
+445
+417
+490
 % Area used
 pct_covered_by_NBS_RES
 17
@@ -544,10 +544,10 @@ pct_covered_by_NBS_RES
 11
 
 MONITOR
-180
-402
-282
-447
+421
+445
+548
+490
 Ratio RES-NBS
 ratio-res-nbs-any selected-block
 17
@@ -555,10 +555,10 @@ ratio-res-nbs-any selected-block
 11
 
 MONITOR
-287
-403
-357
-448
+192
+504
+262
+549
 RES (kW)
 res-kw-of-any selected-block
 0
@@ -566,10 +566,10 @@ res-kw-of-any selected-block
 11
 
 MONITOR
-361
-403
-431
-448
+272
+504
+342
+549
 # Trees
 trees-of-any selected-block
 17
@@ -577,10 +577,10 @@ trees-of-any selected-block
 11
 
 MONITOR
-438
-403
-568
-448
+352
+505
+430
+550
 Cost (€)
 cost-of-any selected-block
 0
@@ -588,10 +588,10 @@ cost-of-any selected-block
 11
 
 MONITOR
-573
-404
-713
-449
+439
+504
+545
+549
 CO2 offset (kg)
 co2-of-any selected-block
 0
