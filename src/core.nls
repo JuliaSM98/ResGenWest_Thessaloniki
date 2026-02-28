@@ -10,6 +10,10 @@ to setup-core [options-path-arg shapefile-path-arg]
   ;; Restore globals so buttons and helpers can read them after setup
   set shapefile-path _sf
   set options-csv-path _opt
+  ;; clear-all resets plain code globals to 0, but slider widgets restore their own values.
+  ;; Models without slider widgets for these (e.g. general_analysis.nlogo) need explicit defaults.
+  if max_pct_RES = 0 [ set max_pct_RES 100 ]
+  if max_pct_NBS = 0 [ set max_pct_NBS 100 ]
 
   ;; Updated shapefile path (aggregates areas per block and cell type)
   load-shapefile _sf
@@ -41,27 +45,29 @@ to go-core
 
   ;; plot single point
   let iter (combo-index + 1)
-  ;; Combined Cost & CO2 plot (two pens)
-  set-current-plot "Cost & CO2"
-  ;; Cost pen
-  if not plot-pen-exists? "Cost" [ create-temporary-plot-pen "Cost" ]
-  set-current-plot-pen "Cost"
-  set-plot-pen-mode 2  ;; points
-  set-plot-pen-color 105  ;; blue
-  plotxy iter (item 0 tot)
-  ;; CO2 pen
-  if not plot-pen-exists? "CO2" [ create-temporary-plot-pen "CO2" ]
-  set-current-plot-pen "CO2"
-  set-plot-pen-mode 2  ;; points
-  set-plot-pen-color 15   ;; red
-  plotxy iter (item 1 tot)
+  ;; Combined Cost & CO2 plot (two pens) — guarded so models without this plot still work
+  carefully [
+    set-current-plot "Cost & CO2"
+    if not plot-pen-exists? "Cost" [ create-temporary-plot-pen "Cost" ]
+    set-current-plot-pen "Cost"
+    set-plot-pen-mode 2  ;; points
+    set-plot-pen-color 105  ;; blue
+    plotxy iter (item 0 tot)
+    if not plot-pen-exists? "CO2" [ create-temporary-plot-pen "CO2" ]
+    set-current-plot-pen "CO2"
+    set-plot-pen-mode 2  ;; points
+    set-plot-pen-color 15   ;; red
+    plotxy iter (item 1 tot)
+  ] []
 
-  ;; Cost vs CO2 scatter
-  set-current-plot "Cost vs CO2"
-  if not plot-pen-exists? "points" [ create-temporary-plot-pen "points" ]
-  set-current-plot-pen "points"
-  set-plot-pen-mode 2  ;; points
-  plotxy (item 0 tot) (item 1 tot)
+  ;; Cost vs CO2 scatter — guarded likewise
+  carefully [
+    set-current-plot "Cost vs CO2"
+    if not plot-pen-exists? "points" [ create-temporary-plot-pen "points" ]
+    set-current-plot-pen "points"
+    set-plot-pen-mode 2  ;; points
+    plotxy (item 0 tot) (item 1 tot)
+  ] []
 
   set combo-index combo-index + 1
   tick

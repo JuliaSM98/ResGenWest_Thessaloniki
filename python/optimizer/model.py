@@ -10,26 +10,38 @@ class Params:
     # NBS intensities (per tree)
     cost_nbs: float = 600.0
     co2_nbs: float = 25.0
+    # Coverage (percent 0..100).
+    # pct_covered_by_NBS_RES is the legacy single value used as fallback.
+    # pct_covered_roof / pct_covered_ground override it per cell type when >= 0.
+    pct_covered_by_NBS_RES: float = 50.0
+    pct_covered_roof: float = -1.0    # if < 0, falls back to pct_covered_by_NBS_RES
+    pct_covered_ground: float = -1.0  # if < 0, falls back to pct_covered_by_NBS_RES
     # Tree layout
-    pct_covered_by_NBS_RES: float = 50.0  # percent 0..100
     tree_cover_area: float = 5.0          # m2 per tree footprint
     # Roof structural constraints
     tree_weight: float = 400.0            # kg per tree (approx.)
     max_roof_load: float = 100.0          # kg per m2 maximum allowable load
 
 
+def coverage_for_type(p: Params, cell_type: str) -> float:
+    """Return coverage fraction (0..1) for the given cell type."""
+    ct = (cell_type or "").strip().lower()
+    if ct == "roof" and p.pct_covered_roof >= 0:
+        return max(0.0, min(100.0, p.pct_covered_roof)) / 100.0
+    if ct == "ground" and p.pct_covered_ground >= 0:
+        return max(0.0, min(100.0, p.pct_covered_ground)) / 100.0
+    return max(0.0, min(100.0, p.pct_covered_by_NBS_RES)) / 100.0
+
+
 def compute_block_option_metrics(area_m2: float, res_pct: float, nbs_pct: float, cell_type: str, p: Params) -> Tuple[float, float]:
     """Return (cost, co2) for a single block given its area and an option.
 
-    The coverage parameter applies to the whole area for both RES and NBS:
-    - covered_area = area_m2 * coverage, coverage = clamp(pct_covered_by_NBS_RES, 0..100)/100
-    - RES area      = covered_area * res_pct
-    - effective NBS area = covered_area * nbs_pct
-    - trees = floor(effective NBS area / tree_cover_area)
+    covered_area = area_m2 * coverage_for_type(p, cell_type)
+    RES area     = covered_area * res_pct
+    NBS area     = covered_area * nbs_pct  → integer trees
     """
-    cov = max(0.0, min(100.0, p.pct_covered_by_NBS_RES)) / 100.0
+    cov = coverage_for_type(p, cell_type)
     res_area = max(0.0, area_m2 * cov * max(0.0, res_pct))
-    # integer trees as in NetLogo
     eff_nbs_area = max(0.0, area_m2 * cov * max(0.0, nbs_pct))
     trees = int(eff_nbs_area // max(1e-9, p.tree_cover_area))
     # Roof load cap: trees <= floor(eff_nbs_area * max_roof_load / tree_weight)

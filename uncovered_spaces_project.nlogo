@@ -34,6 +34,11 @@ globals [
   ;; Roof constraints used by sampler (define defaults here since we have no sliders)
   tree_weight
   max_roof_load
+
+  ;; Per-type coverage — mirrors pct_covered_by_NBS_RES for backward-compat with sampler.nls
+  pct_covered_roof        ;; eligible fraction of rooftop area (set = pct_covered_by_NBS_RES in setup)
+  pct_covered_ground      ;; eligible fraction of ground-floor area (set = pct_covered_by_NBS_RES in setup)
+  res_cell_area           ;; PV panel footprint in m2 (default 5; informational for general_analysis)
 ]
 
 to setup
@@ -44,6 +49,10 @@ to setup
   if (not is-string? shapefile-path) or (shapefile-path = "") [
     set shapefile-path "data/shapefiles/uncovered_spaces/uncovered_spaces_all.shp"
   ]
+  ;; Mirror single coverage slider into per-type variables (used by sampler.nls)
+  set pct_covered_roof   pct_covered_by_NBS_RES
+  set pct_covered_ground pct_covered_by_NBS_RES
+  set res_cell_area      5
   setup-core options-csv-path shapefile-path
   set outputs_base (word "data/outputs/uncovered_spaces")
 end
@@ -56,6 +65,9 @@ to reset-defaults
   set max_pct_RES            100
   set max_pct_NBS            100
   set pct_covered_by_NBS_RES   50
+  set pct_covered_roof         pct_covered_by_NBS_RES
+  set pct_covered_ground       pct_covered_by_NBS_RES
+  set res_cell_area            5
   set cost_NBS               600
   set cost_RES               240
   set co2_reduction_NBS      25

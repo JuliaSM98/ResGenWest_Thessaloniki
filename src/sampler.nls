@@ -1,5 +1,14 @@
 ;; Portfolio sampler and metrics
 
+;; Returns the fractional eligible coverage for a cell type.
+;; general_analysis.nlogo exposes separate sliders for roof and ground;
+;; older models set both to pct_covered_by_NBS_RES in their setup procedure.
+to-report coverage-of-type [ctyp]
+  ifelse ctyp = "roof"
+    [ report pct_covered_roof / 100 ]
+    [ report pct_covered_ground / 100 ]
+end
+
 to init-portfolio-sampler
   set blocks-ordered sort table:keys id-table
   let counts []
@@ -59,8 +68,8 @@ to-report compute-portfolio-totals [portfolio]
     let area item 0 rec
     let ctyp item 1 rec
 
-    ;; RES contributions (per m2) — apply overall coverage to RES too
-    let cov (pct_covered_by_NBS_RES / 100)
+    ;; RES contributions (per m2) — coverage depends on cell type (roof vs ground)
+    let cov (coverage-of-type ctyp)
     let res_area (area * cov * res)
     let resI intensity-of "RES"      ;; [cost_per_m2 co2_per_m2]
     let res_cost_m2 item 0 resI
@@ -144,7 +153,8 @@ end
 to-report res-area-of [bid]
   let m mix-for bid
   if m = nobody [ report 0 ]
-  report (area-of bid) * (pct_covered_by_NBS_RES / 100) * (item 0 m)
+  let ctyp celltype-of bid
+  report (area-of bid) * (coverage-of-type ctyp) * (item 0 m)
 end
 
 to-report trees-of [bid]
@@ -153,7 +163,7 @@ to-report trees-of [bid]
   let area area-of bid
   let ctyp celltype-of bid
   let nbs  item 1 m
-  let eff_nbs_area (area * (pct_covered_by_NBS_RES / 100) * nbs)
+  let eff_nbs_area (area * (coverage-of-type ctyp) * nbs)
   let trees (ifelse-value (tree_cover_area > 0) [ floor (eff_nbs_area / tree_cover_area) ] [ 0 ])
   if (ctyp = "roof") [
     if (tree_weight > 0) [
@@ -185,8 +195,9 @@ to-report total-res-area-current
     let m mix-for bid
     if m != nobody [
       let area area-of bid
+      let ctyp celltype-of bid
       let res  item 0 m
-      let cov (pct_covered_by_NBS_RES / 100)
+      let cov (coverage-of-type ctyp)
       set total total + (area * cov * res)
     ]
   ]
@@ -270,7 +281,7 @@ to-report cost-of [bid]
   let ctyp item 1 rec
   let res  item 0 m
   let nbs  item 1 m
-  let cov (pct_covered_by_NBS_RES / 100)
+  let cov (coverage-of-type ctyp)
   ;; RES
   let res_area (area * cov * res)
   let resI intensity-of "RES"      ;; [cost_per_m2 co2_per_m2]
@@ -299,7 +310,7 @@ to-report co2-of [bid]
   let ctyp item 1 rec
   let res  item 0 m
   let nbs  item 1 m
-  let cov (pct_covered_by_NBS_RES / 100)
+  let cov (coverage-of-type ctyp)
   ;; RES
   let res_area (area * cov * res)
   let resI intensity-of "RES"      ;; [cost_per_m2 co2_per_m2]
@@ -381,7 +392,7 @@ to render-current-table [portfolio]
     let resI intensity-of "RES"      ;; [cost_per_m2 co2_per_m2]
     let res_cost_m2 item 0 resI
     let res_co2_m2  item 1 resI
-    let cov (pct_covered_by_NBS_RES / 100)
+    let cov (coverage-of-type ctyp)
     let eff_nbs_area (area * cov * nbs)
     let trees (ifelse-value (tree_cover_area > 0)
                  [ floor (eff_nbs_area / tree_cover_area) ]

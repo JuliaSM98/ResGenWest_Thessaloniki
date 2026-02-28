@@ -55,7 +55,7 @@ to run-optimizer-and-plot [python-exe uncovered-dir options-csv out-csv budget-m
   let argsf (join-path base "optimizer_args.txt")
   let outcsv (join-path base (filename-of out-csv))
   ;; write optimizer args from sliders so the script can pick them up and override defaults
-  write-optimizer-args "data/outputs/optimizer_args.txt" unco optp budget-mode bs out-csv
+  write-optimizer-args "data/outputs/optimizer_args.txt" unco optp budget-mode bs outcsv
   ;; Execute wrapper script (it reads args from data/outputs/optimizer_args.txt)
   let cmd "scripts/run_optimizer.sh"
   print (word "Running script: " cmd " with uncovered=" unco " options=" optp " steps=" bs)
@@ -136,6 +136,8 @@ to run-optimizer-above-co2-and-save [python-exe uncovered-dir options-csv out-cs
   file-print (word "--cost-nbs=" cost_NBS)
   file-print (word "--co2-nbs=" co2_reduction_NBS)
   file-print (word "--pct-covered-by-NBS-RES=" pct_covered_by_NBS_RES)
+  file-print (word "--pct-covered-roof=" pct_covered_roof)
+  file-print (word "--pct-covered-ground=" pct_covered_ground)
   file-print (word "--tree-cover-area=" tree_cover_area)
   if is-number? tree_weight [ file-print (word "--tree-weight=" tree_weight) ]
   if is-number? max_roof_load [ file-print (word "--max-roof-load=" max_roof_load) ]
@@ -188,6 +190,8 @@ to run-optimizer-both-constraints [python-exe uncovered-dir options-csv out-csv]
   file-print (word "--cost-nbs=" cost_NBS)
   file-print (word "--co2-nbs=" co2_reduction_NBS)
   file-print (word "--pct-covered-by-NBS-RES=" pct_covered_by_NBS_RES)
+  file-print (word "--pct-covered-roof=" pct_covered_roof)
+  file-print (word "--pct-covered-ground=" pct_covered_ground)
   file-print (word "--tree-cover-area=" tree_cover_area)
   file-print (word "--max-pct-res=" max_pct_RES)
   file-print (word "--max-pct-nbs=" max_pct_NBS)
@@ -234,6 +238,8 @@ to write-optimizer-budget-args [path uncovered-dir options-csv out-csv budget_ma
   file-print (word "--cost-nbs=" cost_NBS)
   file-print (word "--co2-nbs=" co2_reduction_NBS)
   file-print (word "--pct-covered-by-NBS-RES=" pct_covered_by_NBS_RES)
+  file-print (word "--pct-covered-roof=" pct_covered_roof)
+  file-print (word "--pct-covered-ground=" pct_covered_ground)
   file-print (word "--tree-cover-area=" tree_cover_area)
   if is-number? tree_weight [ file-print (word "--tree-weight=" tree_weight) ]
   if is-number? max_roof_load [ file-print (word "--max-roof-load=" max_roof_load) ]
@@ -315,6 +321,8 @@ to write-optimizer-args [path uncovered-dir options-csv budget-mode budget-steps
   file-print (word "--cost-nbs=" cost_NBS)
   file-print (word "--co2-nbs=" co2_reduction_NBS)
   file-print (word "--pct-covered-by-NBS-RES=" pct_covered_by_NBS_RES)
+  file-print (word "--pct-covered-roof=" pct_covered_roof)
+  file-print (word "--pct-covered-ground=" pct_covered_ground)
   file-print (word "--tree-cover-area=" tree_cover_area)
   if is-number? tree_weight [ file-print (word "--tree-weight=" tree_weight) ]
   if is-number? max_roof_load [ file-print (word "--max-roof-load=" max_roof_load) ]

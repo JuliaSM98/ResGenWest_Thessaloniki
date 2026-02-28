@@ -5,7 +5,7 @@ from typing import List, Sequence, Tuple, Optional
 
 from .data import load_uncovered_blocks
 from .options import load_ground_options, Options
-from .model import Params, compute_block_option_metrics
+from .model import Params, compute_block_option_metrics, coverage_for_type
 from .ortools_solver import (
     Scale,
     scale_points,
@@ -56,7 +56,6 @@ def write_selections_csv(path: str, solution_id: int, point: Tuple[float, float]
 def write_table_csv(path: str, blocks, block_options: List[List[Options]], selection: Sequence[int], params: Params) -> None:
     """Write a detailed table matching NetLogo's render-current-table output."""
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    cov = max(0.0, min(100.0, params.pct_covered_by_NBS_RES)) / 100.0
     with open(path, 'w') as f:
         f.write('ID, Area_m2, RES%, NBS%, # Trees, RES_m2, NBS_CO2_kg, NBS_Cost_€, RES_CO2_kg, RES_Cost_€, Total_CO2_kg, Total_Cost_€\n')
         sum_area = sum_trees = 0.0
@@ -72,6 +71,7 @@ def write_table_csv(path: str, blocks, block_options: List[List[Options]], selec
             o = block_options[i][choice_idx]
             res_pct = max(0.0, o.res_pct)
             nbs_pct = max(0.0, o.nbs_pct)
+            cov = coverage_for_type(params, cell_type)
             res_area = area * cov * res_pct
             eff_nbs_area = area * cov * nbs_pct
             trees = int(eff_nbs_area // max(1e-9, params.tree_cover_area))
@@ -128,8 +128,7 @@ def write_single_solution_outputs(
             'mode': mode,
             'n_blocks': len(blocks),
             'params': params.__dict__,
-            'options 1': [o.__dict__ for o in block_options[1]],
-            'options 2': [o.__dict__ for o in block_options[2]],
+            'block_options': [[o.__dict__ for o in opts] for opts in block_options],
             'selection': list(selection),
             'blocks': blocks,
         }
@@ -163,6 +162,8 @@ def main() -> None:
     ap.add_argument('--cost-nbs', type=float, default=600.0)
     ap.add_argument('--co2-nbs', type=float, default=25.0)
     ap.add_argument('--pct-covered-by-NBS-RES', type=float, default=50.0)
+    ap.add_argument('--pct-covered-roof', type=float, default=-1.0, help='Coverage fraction for roof blocks (0..100); overrides --pct-covered-by-NBS-RES for roof blocks when >= 0')
+    ap.add_argument('--pct-covered-ground', type=float, default=-1.0, help='Coverage fraction for ground blocks (0..100); overrides --pct-covered-by-NBS-RES for ground blocks when >= 0')
     ap.add_argument('--tree-cover-area', type=float, default=5.0)
     ap.add_argument('--tree-weight', type=float, default=400.0)
     ap.add_argument('--max-roof-load', type=float, default=100.0)
@@ -184,6 +185,8 @@ def main() -> None:
         cost_nbs=args.cost_nbs,
         co2_nbs=args.co2_nbs,
         pct_covered_by_NBS_RES=args.pct_covered_by_NBS_RES,
+        pct_covered_roof=args.pct_covered_roof,
+        pct_covered_ground=args.pct_covered_ground,
         tree_cover_area=args.tree_cover_area,
         tree_weight=args.tree_weight,
         max_roof_load=args.max_roof_load,

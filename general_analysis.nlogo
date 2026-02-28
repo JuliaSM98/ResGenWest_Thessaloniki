@@ -13,7 +13,7 @@ globals [
   assumptions-rows
 
   ;; catalogs / sampler state
-  options-by-type         ;; table: "roof"/"roof" -> list of option records [res nbs label]
+  options-by-type         ;; table: "roof"/"ground" -> list of option records [res nbs label]
   intensities             ;; table: action_id -> [cost_per_m2 co2_per_m2]
   blocks-ordered          ;; stable list of block IDs (order we sample)
   visited-portfolios      ;; table: key-string -> [total-cost total-co2]
@@ -24,72 +24,111 @@ globals [
   last-total-cost         ;; number: total cost of last iteration
   last-total-co2          ;; number: total CO2 of last iteration
   last-portfolio          ;; list: last computed portfolio [[bid opt] ...]
-  print-tables            ;; switch-like flag to control table printing
+  ;print-tables            ;; slider 0 (no) / 1 (yes)
 
-  ;; Per-type coverage — mirrors pct_covered_by_NBS_RES for backward-compat with sampler.nls
-  pct_covered_roof        ;; eligible fraction of rooftop area (set = pct_covered_by_NBS_RES in setup)
-  pct_covered_ground      ;; eligible fraction of ground-floor area (set = pct_covered_by_NBS_RES in setup)
-  res_cell_area           ;; PV panel footprint in m2 (default 5; informational for general_analysis)
+  ;; Option filters (fixed at 100 — all options always enabled, no slider in this model)
+  max_pct_RES
+  max_pct_NBS
+
+  ;; Derived average coverage passed to Python optimizer for backward-compatibility.
+  ;; Computed in setup as average of pct_covered_roof and pct_covered_ground.
+  pct_covered_by_NBS_RES
 
   ;; Editable paths (set here or via code)
   options-csv-path        ;; path to options.csv
-  shapefile-path          ;; path to unified shapefile (.shp) or directory
-  outputs_base            ;; base folder for optimization outputs (e.g., data/outputs/rooftops)
+  shapefile-path          ;; path to shapefile (.shp)
+  outputs_base            ;; base folder for optimization outputs
 
 ]
 
 to setup
-  ;; Provide defaults if not set; users can edit these paths in the Code tab
   if (not is-string? options-csv-path) or (options-csv-path = "") [
     set options-csv-path "data/csv/options.csv"
   ]
   if (not is-string? shapefile-path) or (shapefile-path = "") [
-    set shapefile-path "data/shapefiles/rooftops/rooftops.shp"
+    set shapefile-path "data/shapefiles/general/one_school_building.shp"
   ]
-  ;; Mirror single coverage slider into per-type variables (used by sampler.nls)
-  set pct_covered_roof   pct_covered_by_NBS_RES
-  set pct_covered_ground pct_covered_by_NBS_RES
-  set res_cell_area      5
+  ;; Fix option filters at 100 (all options enabled — no slider in this model)
+  set max_pct_RES 100
+  set max_pct_NBS 100
   setup-core options-csv-path shapefile-path
-  set outputs_base (word "data/outputs/rooftops")
+  ;; Recompute after setup-core because clear-all inside it resets code globals to 0.
+  ;; Sliders (pct_covered_roof, pct_covered_ground) are restored by their widgets; this derived global is not.
+  set pct_covered_by_NBS_RES (pct_covered_roof + pct_covered_ground) / 2
+  set outputs_base (word "data/outputs/general")
+end
+
+to go
+  if (not is-boolean? initialized?) or (initialized? = false) [
+    user-message "Please click setup first to load data and initialize."
+    stop
+  ]
+  go-core
 end
 
 to reset-defaults
-  ;; Reset user-editable parameters and paths to defaults
   set tree_cover_area        5
+  set res_cell_area          5
   set tree_weight            400
   set max_roof_load          100
   set max_pct_RES            100
   set max_pct_NBS            100
-  set pct_covered_by_NBS_RES   50
-  set pct_covered_roof         pct_covered_by_NBS_RES
-  set pct_covered_ground       pct_covered_by_NBS_RES
-  set res_cell_area            5
+  set pct_covered_roof       70
+  set pct_covered_ground     50
+  set pct_covered_by_NBS_RES (pct_covered_roof + pct_covered_ground) / 2
   set cost_NBS               600
   set cost_RES               240
   set co2_reduction_NBS      25
   set co2_reduction_RES      71
-  set outputs_base           "data/outputs/rooftops"
-  set res_kw_per_m2          0.2
   set print-tables           false
+  set res_kw_per_m2          0.2
   ;; Optimizer controls
   set budget-max            10000000
   set co2-min               0
   ;; Paths
   set options-csv-path       "data/csv/options.csv"
-  set shapefile-path         "data/shapefiles/rooftops/rooftops.shp"
-  ;; Optimizer steps slider
+  set shapefile-path         "data/shapefiles/general/one_school_building.shp"
+  set outputs_base           "data/outputs/general"
   if is-number? budget_steps [ set budget_steps 41 ]
+end
+
+to show-table-file [path]
+  clear-output
+  if not file-exists? path [
+    output-print (word "File not found: " path)
+    stop
+  ]
+  file-close-all
+  file-open path
+  while [ not file-at-end? ] [
+    let row file-read-line
+    if length row > 0 [
+      output-print row
+    ]
+  ]
+  file-close
+end
+
+to show-solution-table
+  show-table-file (word outputs-base-dir "/solve_under_budget_table.csv")
+end
+
+to show-co2-table
+  show-table-file (word outputs-base-dir "/solve_above_co2_table.csv")
+end
+
+to show-both-table
+  show-table-file (word outputs-base-dir "/solve_both_constraints_table.csv")
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-1092
-96
-1451
-456
+615
+253
+937
+576
 -1
 -1
-10.64
+9.52
 1
 10
 1
@@ -127,9 +166,26 @@ NIL
 1
 
 BUTTON
-95
+104
+22
+181
+56
+go
+go
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+194
 23
-204
+303
 57
 Reset Params
 reset-defaults
@@ -144,13 +200,13 @@ NIL
 1
 
 PLOT
-725
-202
-1085
-455
-Cost vs CO2 (Python)
+990
+10
+1346
+197
+Cost vs CO2
 Cost (€)
-CO2 (kg
+CO2 (Kg)
 0.0
 10.0
 0.0
@@ -159,30 +215,34 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" ""
+"default" 1.0 2 -16777216 true "" ""
 
-BUTTON
-214
-24
-388
-57
-Run Cost vs CO2 curve
-        run-optimizer-and-plot\n        \"python\"\n        shapefile-path\n        options-csv-path\n        \"data/outputs/rooftops/pareto_uncovered_ortools.csv\"\n        \"steps\"\n        41
-NIL
+SWITCH
+317
+25
+448
+58
+print-tables
+print-tables
 1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
+1
+-1000
+
+TEXTBOX
+21
+67
+133
+85
+Assumptions:
+11
+0.0
 1
 
 SLIDER
-14
-96
-186
-129
+17
+89
+189
+122
 cost_RES
 cost_RES
 0
@@ -194,10 +254,55 @@ cost_RES
 HORIZONTAL
 
 SLIDER
-14
-134
-233
-167
+197
+88
+369
+121
+cost_NBS
+cost_NBS
+0
+1000
+600.0
+1
+1
+€/tree
+HORIZONTAL
+
+SLIDER
+376
+88
+563
+121
+pct_covered_roof
+pct_covered_roof
+0
+100
+70.0
+1
+1
+%
+HORIZONTAL
+
+SLIDER
+568
+88
+757
+121
+pct_covered_ground
+pct_covered_ground
+0
+100
+50.0
+1
+1
+%
+HORIZONTAL
+
+SLIDER
+16
+133
+272
+166
 co2_reduction_RES
 co2_reduction_RES
 0
@@ -209,29 +314,14 @@ kg/(m2·year)
 HORIZONTAL
 
 SLIDER
-202
-96
-374
-129
-cost_NBS
-cost_NBS
-0
-2000
-600.0
-1
-1
-€/tree
-HORIZONTAL
-
-SLIDER
-240
+286
 134
-466
+548
 167
 co2_reduction_NBS
 co2_reduction_NBS
 0
-200
+100
 25.0
 1
 1
@@ -239,29 +329,14 @@ kg/(tree·year)
 HORIZONTAL
 
 SLIDER
-386
-96
-571
-129
-pct_covered_by_NBS_RES
-pct_covered_by_NBS_RES
-0
-100
-50.0
-1
-1
-%
-HORIZONTAL
-
-SLIDER
-471
+554
 135
-643
+710
 168
 tree_cover_area
 tree_cover_area
 1
-20
+10
 5.0
 1
 1
@@ -269,34 +344,74 @@ m2/tree
 HORIZONTAL
 
 SLIDER
-580
-96
-752
-129
-max_pct_RES
-max_pct_RES
-0
-100
-100.0
+714
+135
+870
+168
+res_cell_area
+res_cell_area
+0.5
+20
+5.0
+0.5
 1
-1
-%
+m2/cell
 HORIZONTAL
 
 SLIDER
-757
-98
-929
-131
-max_pct_NBS
-max_pct_NBS
+192
+176
+379
+209
+res_kw_per_m2
+res_kw_per_m2
 0
-100
+1
+0.2
+0.01
+1
+kW/m2
+HORIZONTAL
+
+SLIDER
+385
+177
+513
+210
+tree_weight
+tree_weight
+5
+1000
+400.0
+1
+1
+kg
+HORIZONTAL
+
+SLIDER
+518
+177
+687
+210
+max_roof_load
+max_roof_load
+10
+200
 100.0
 1
 1
-%
+kg/m2
 HORIZONTAL
+
+TEXTBOX
+17
+220
+167
+238
+Optimal solution
+11
+0.0
+1
 
 SLIDER
 14
@@ -315,41 +430,24 @@ HORIZONTAL
 
 SLIDER
 13
-242
-185
-275
+246
+200
+279
 budget-max
 budget-max
 0
-100000000
-1.2101911E7
+10000000
+1919000.0
+1000
 1
-1
-NIL
+€
 HORIZONTAL
 
-BUTTON
-193
-245
-400
-280
-optimizer with budget
-run-optimizer-under-budget-and-plot\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/rooftops/solve_under_budget.csv\"
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
 SLIDER
-13
-283
-185
-316
+14
+284
+199
+317
 co2-min
 co2-min
 0
@@ -361,12 +459,12 @@ kg
 HORIZONTAL
 
 BUTTON
-192
-285
-400
-318
-optimizer with CO2
-run-optimizer-above-co2-and-save\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/rooftops/solve_above_co2.csv\"
+205
+246
+412
+281
+optimizer with budget
+run-optimizer-under-budget-and-plot\n    "python"\n    shapefile-path\n    options-csv-path\n    "data/outputs/general/solve_under_budget.csv"\nshow-solution-table
 NIL
 1
 T
@@ -378,12 +476,12 @@ NIL
 1
 
 BUTTON
-407
-265
-541
-298
-optimizer with both
-run-optimizer-both-constraints\n  \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/rooftops/solve_both_constraints.csv\"
+206
+286
+414
+319
+optimizer with CO2
+run-optimizer-above-co2-and-save\n    "python"\n    shapefile-path\n    options-csv-path\n    "data/outputs/general/solve_above_co2.csv"\nshow-co2-table
 NIL
 1
 T
@@ -394,167 +492,74 @@ NIL
 NIL
 1
 
-SLIDER
-190
-176
-362
-209
-res_kw_per_m2
-res_kw_per_m2
-0
+BUTTON
+424
+266
+558
+299
+optimizer with both
+run-optimizer-both-constraints\n    "python"\n    shapefile-path\n    options-csv-path\n    "data/outputs/general/solve_both_constraints.csv"\nshow-both-table
+NIL
 1
-0.2
-0.01
-1
-kW/m2
-HORIZONTAL
-
-TEXTBOX
-22
-75
-172
-93
-Assumptions:
-11
-0.0
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
 1
 
-TEXTBOX
-19
-217
-169
-235
-Optimal solution:
-11
-0.0
+BUTTON
+456
+26
+630
+59
+Run Cost vs CO2 curve
+        run-optimizer-and-plot\n        "python"\n        shapefile-path\n        options-csv-path\n        "data/outputs/general/pareto_uncovered_ortools.csv"\n        "steps"\n        41
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
 1
 
-CHOOSER
-13
-351
-281
-396
-selected-block
-selected-block
-"Total" "8.Block_1:roof" "8.Block_2:roof" "8.Block_3:roof" "8.Block_4:roof" "8.Block_5:roof" "8.Block_6:roof" "8.Block_7:roof" "8.Block_8:roof" "8.Block_9:roof" "8.Block_10:roof" "8.Block_11:roof" "8.Block_12:roof" "8.Block_13:roof" "8.Block_14:roof" "8.Block_15:roof" "8.Block_16:roof" "8.Block_17:roof" "8.Block_18:roof" "8.Block_19:roof" "8.Block_20:roof" "8.Block_21:roof" "8.Block_22:roof" "8.Block_23:roof" "8.Block_24:roof" "8.Block_25:roof" "8.Block_26:roof" "8.Block_27:roof" "8.Block_28:roof" "8.Block_29:roof" "8.Block_30:roof" "8.Block_31:roof" "8.Block_32:roof" "8.Block_33:roof" "8.Block_34:roof" "8.Block_35:roof" "8.Block_36:roof" "8.Block_37:roof" "8.Block_38:roof" "8.Block_39:roof" "8.Block_40:roof" "8.Block_41:roof" "8.Block_42:roof" "8.Block_43:roof" "8.Block_44:roof" "8.Block_45:roof" "8.Block_46:roof" "8.Block_47:roof" "8.Block_48:roof" "8.Block_49:roof" "8.Block_50:roof" "8.Block_51:roof" "8.Block_52:roof" "8.Block_53:roof" "8.Block_54:roof" "8.Block_55:roof" "8.Block_56:roof" "8.Block_57:roof" "8.Block_58:roof" "8.Block_59:roof" "8.Block_60:roof" "8.Block_61:roof"
-0
-
-MONITOR
-12
-406
-104
-451
-Area m2
-area-of-any selected-block
-0
-1
-11
-
-MONITOR
-107
-406
-197
-451
-% Area used
-pct_covered_by_NBS_RES
-17
-1
-11
-
-MONITOR
-506
-409
-596
-454
+PLOT
+991
+204
+1347
+384
+Cost vs CO2 (Python)
 Cost (€)
-cost-of-any selected-block
-0
-1
-11
-
-MONITOR
-599
-409
-703
-454
-CO2 offset (kg)
-co2-of-any selected-block
-0
-1
-11
-
-MONITOR
-403
-409
-503
-454
-# Trees
-trees-of-any selected-block
-17
-1
-11
-
-MONITOR
-300
-408
-400
-453
-RES (kW)
-res-kw-of-any selected-block
-0
-1
-11
-
-MONITOR
-199
-407
-297
-452
-Ratio RES-NBS
-ratio-res-nbs-any selected-block
-17
-1
-11
+CO2 (kg
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" ""
 
 TEXTBOX
-19
-327
-169
-345
+16
+332
+166
+350
 Output:\n
 11
 0.0
 1
 
-SLIDER
-365
-178
-497
-211
-tree_weight
-tree_weight
-0
-1000
-400.0
-1
-1
-kg
-HORIZONTAL
-
-SLIDER
-502
-179
-667
-212
-max_roof_load
-max_roof_load
-10
-200
-100.0
-1
-1
-kg/m2
-HORIZONTAL
+OUTPUT
+15
+349
+610
+555
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
