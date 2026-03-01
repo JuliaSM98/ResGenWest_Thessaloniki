@@ -42,13 +42,13 @@ to run-optimizer-and-plot [python-exe uncovered-dir options-csv out-csv budget-m
                    [ options-csv-path ]
                    [ "data/csv/options.csv" ] ])
 
-  ;; Determine effective steps (prefer slider, else button arg, else 41)
+  ;; Determine effective steps (prefer slider, else button arg, else 0=auto)
   let bs (ifelse-value (is-number? budget_steps)
              [ budget_steps ]
-             [ ifelse-value (is-number? budget-steps) [ budget-steps ] [ 41 ] ])
+             [ ifelse-value (is-number? budget-steps) [ budget-steps ] [ 0 ] ])
 
-  ;; Debug prints: show both the slider and the computed steps
-  print (word "Effective budget-steps=" bs)
+  ;; bs = 0 means auto-compute in Python
+  print (word "Effective budget-steps=" (ifelse-value (bs > 0) [ bs ] [ "auto" ]))
 
   ;; build project-specific output paths
   let base outputs-base-dir
@@ -139,10 +139,15 @@ to run-optimizer-above-co2-and-save [python-exe uncovered-dir options-csv out-cs
   file-print (word "--pct-covered-roof=" pct_covered_roof)
   file-print (word "--pct-covered-ground=" pct_covered_ground)
   file-print (word "--tree-cover-area=" tree_cover_area)
+  if is-number? res_cell_area [ file-print (word "--res-cell-area=" res_cell_area) ]
   if is-number? tree_weight [ file-print (word "--tree-weight=" tree_weight) ]
   if is-number? max_roof_load [ file-print (word "--max-roof-load=" max_roof_load) ]
   file-print (word "--max-pct-res=" max_pct_RES)
   file-print (word "--max-pct-nbs=" max_pct_NBS)
+  if is-number? res_cost_floor    [ file-print (word "--res-cost-floor="    res_cost_floor) ]
+  if is-number? nbs_cost_floor    [ file-print (word "--nbs-cost-floor="    nbs_cost_floor) ]
+  if is-number? res_discount_units [ file-print (word "--res-discount-units=" res_discount_units) ]
+  if is-number? nbs_discount_units [ file-print (word "--nbs-discount-units=" nbs_discount_units) ]
   file-close
   let cmd "scripts/run_optimizer.sh"
   print (word "Running single-solve with CO2 >= " co2-min)
@@ -193,8 +198,13 @@ to run-optimizer-both-constraints [python-exe uncovered-dir options-csv out-csv]
   file-print (word "--pct-covered-roof=" pct_covered_roof)
   file-print (word "--pct-covered-ground=" pct_covered_ground)
   file-print (word "--tree-cover-area=" tree_cover_area)
+  if is-number? res_cell_area [ file-print (word "--res-cell-area=" res_cell_area) ]
   file-print (word "--max-pct-res=" max_pct_RES)
   file-print (word "--max-pct-nbs=" max_pct_NBS)
+  if is-number? res_cost_floor    [ file-print (word "--res-cost-floor="    res_cost_floor) ]
+  if is-number? nbs_cost_floor    [ file-print (word "--nbs-cost-floor="    nbs_cost_floor) ]
+  if is-number? res_discount_units [ file-print (word "--res-discount-units=" res_discount_units) ]
+  if is-number? nbs_discount_units [ file-print (word "--nbs-discount-units=" nbs_discount_units) ]
   file-close
   let cmd "scripts/run_optimizer.sh"
   print (word "Running both-constraints with budget=" budget-max " and CO2 >= " co2-min)
@@ -241,10 +251,15 @@ to write-optimizer-budget-args [path uncovered-dir options-csv out-csv budget_ma
   file-print (word "--pct-covered-roof=" pct_covered_roof)
   file-print (word "--pct-covered-ground=" pct_covered_ground)
   file-print (word "--tree-cover-area=" tree_cover_area)
+  if is-number? res_cell_area [ file-print (word "--res-cell-area=" res_cell_area) ]
   if is-number? tree_weight [ file-print (word "--tree-weight=" tree_weight) ]
   if is-number? max_roof_load [ file-print (word "--max-roof-load=" max_roof_load) ]
   file-print (word "--max-pct-res=" max_pct_RES)
   file-print (word "--max-pct-nbs=" max_pct_NBS)
+  if is-number? res_cost_floor    [ file-print (word "--res-cost-floor="    res_cost_floor) ]
+  if is-number? nbs_cost_floor    [ file-print (word "--nbs-cost-floor="    nbs_cost_floor) ]
+  if is-number? res_discount_units [ file-print (word "--res-discount-units=" res_discount_units) ]
+  if is-number? nbs_discount_units [ file-print (word "--nbs-discount-units=" nbs_discount_units) ]
   file-close
 end
 
@@ -314,8 +329,9 @@ to write-optimizer-args [path uncovered-dir options-csv budget-mode budget-steps
   ;; Determine step count from slider or param (no budget-mode flag)
   let bs (ifelse-value (is-number? budget_steps)
              [ budget_steps ]
-             [ ifelse-value (is-number? budget-steps) [ budget-steps ] [ 41 ] ])
-  file-print (word "--budget-steps=" bs)
+             [ ifelse-value (is-number? budget-steps) [ budget-steps ] [ 0 ] ])
+  ;; bs = 0 means auto-compute in Python (omit the flag)
+  if bs > 0 [ file-print (word "--budget-steps=" bs) ]
   file-print (word "--cost-res=" cost_RES)
   file-print (word "--co2-res=" co2_reduction_RES)
   file-print (word "--cost-nbs=" cost_NBS)
@@ -324,10 +340,15 @@ to write-optimizer-args [path uncovered-dir options-csv budget-mode budget-steps
   file-print (word "--pct-covered-roof=" pct_covered_roof)
   file-print (word "--pct-covered-ground=" pct_covered_ground)
   file-print (word "--tree-cover-area=" tree_cover_area)
+  if is-number? res_cell_area [ file-print (word "--res-cell-area=" res_cell_area) ]
   if is-number? tree_weight [ file-print (word "--tree-weight=" tree_weight) ]
   if is-number? max_roof_load [ file-print (word "--max-roof-load=" max_roof_load) ]
   file-print (word "--max-pct-res=" max_pct_RES)
   file-print (word "--max-pct-nbs=" max_pct_NBS)
+  if is-number? res_cost_floor    [ file-print (word "--res-cost-floor="    res_cost_floor) ]
+  if is-number? nbs_cost_floor    [ file-print (word "--nbs-cost-floor="    nbs_cost_floor) ]
+  if is-number? res_discount_units [ file-print (word "--res-discount-units=" res_discount_units) ]
+  if is-number? nbs_discount_units [ file-print (word "--nbs-discount-units=" nbs_discount_units) ]
   file-close
 end
 
@@ -345,17 +366,38 @@ to plot-optimizer-results [csv-path plot-name_elem]
   file-close-all
   file-open csv-path
   if file-at-end? [ file-close stop ]
-  ;; consume header
-  let _header csv:from-row file-read-line
+  ;; header parsing
+  let header csv:from-row file-read-line
+  let i-cost position "cost" header
+  let i-co2  position "co2" header
+  if (i-cost = false or i-co2 = false) [ file-close stop ]
+  ;; Prefer pre-computed discounted cost column; fall back to recomputing from unit counts
+  let i-disc position "cost_discounted" header
+  let i-nru  position "n_res_units" header
+  let i-nt   position "n_trees" header
   while [ not file-at-end? ] [
     let line file-read-line
     if length line > 0 [
       let row csv:from-row line
-      ;; Expect: cost,co2,n_blocks; items may already be numbers
-      let cost item 0 row
-      let co2  item 1 row
+      let cost item i-cost row
+      let co2  item i-co2  row
       if not is-number? cost [ set cost read-from-string cost ]
       if not is-number? co2  [ set co2  read-from-string co2  ]
+      ;; Use pre-computed discounted cost if available
+      ifelse (i-disc != false and i-disc >= 0) [
+        let dc item i-disc row
+        if not is-number? dc [ set dc read-from-string dc ]
+        set cost dc
+      ] [
+        ;; Legacy: re-compute discounted cost from unit counts
+        if (i-nru != false and i-nru >= 0 and i-nt != false and i-nt >= 0) [
+          let nres item i-nru row
+          let ntre item i-nt  row
+          if not is-number? nres [ set nres read-from-string nres ]
+          if not is-number? ntre [ set ntre read-from-string ntre ]
+          set cost ( (discounted-total-cost-res nres) + (discounted-total-cost-nbs ntre) )
+        ]
+      ]
       plotxy cost co2
     ]
   ]

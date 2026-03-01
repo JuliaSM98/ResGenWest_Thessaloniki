@@ -56,8 +56,11 @@ to-report portfolio-key [portfolio]
 end
 
 to-report compute-portfolio-totals [portfolio]
-  let total-cost 0
-  let total-co2  0
+  ;; Accumulate physical quantities first; apply portfolio-level discount to cost at the end.
+  let total-res-area 0
+  let total-res-units 0
+  let total-trees    0
+  let total-co2      0
   foreach portfolio [ p ->
     let bid item 0 p
     let opt item 1 p
@@ -72,9 +75,7 @@ to-report compute-portfolio-totals [portfolio]
     let cov (coverage-of-type ctyp)
     let res_area (area * cov * res)
     let resI intensity-of "RES"      ;; [cost_per_m2 co2_per_m2]
-    let res_cost_m2 item 0 resI
     let res_co2_m2  item 1 resI
-    let res_cost_total (res_area * res_cost_m2)
     let res_co2_total  (res_area * res_co2_m2)
 
     ;; NBS contributions (per tree) with coverage cap
@@ -89,12 +90,22 @@ to-report compute-portfolio-totals [portfolio]
         if trees > load_cap [ set trees load_cap ]
       ]
     ]
-    let nbs_cost_total (trees * cost_NBS)
     let nbs_co2_total  (trees * co2_reduction_NBS)
 
-    set total-cost total-cost + res_cost_total + nbs_cost_total
-    set total-co2  total-co2  + res_co2_total  + nbs_co2_total
+    set total-res-area total-res-area + res_area
+    if (res_cell_area > 0) [ set total-res-units total-res-units + floor (res_area / res_cell_area) ]
+    set total-trees    total-trees    + trees
+    set total-co2      total-co2      + res_co2_total + nbs_co2_total
   ]
+  ;; Apply portfolio-level economies-of-scale discount to total cost.
+  ;; RES cost uses continuous area (consistent with per-block table); phi uses integer units.
+  let gR (ifelse-value (is-number? res_cost_floor) [ res_cost_floor ] [ 1.0 ])
+  let NR (ifelse-value ((is-number? res_discount_units) and (res_discount_units > 0)) [ res_discount_units ] [ 1e30 ])
+  let phiR min (list (total-res-units / NR) 1)
+  let gN (ifelse-value (is-number? nbs_cost_floor) [ nbs_cost_floor ] [ 1.0 ])
+  let NN (ifelse-value ((is-number? nbs_discount_units) and (nbs_discount_units > 0)) [ nbs_discount_units ] [ 1e30 ])
+  let phiN min (list (total-trees / NN) 1)
+  let total-cost ((total-res-area * cost_RES * (1 - (1 - gR) * phiR)) + (cost_NBS * total-trees * (1 - (1 - gN) * phiN)))
   report (list total-cost total-co2)
 end
 
@@ -334,9 +345,9 @@ end
 to-report cost-of-any [key]
   if key = "Total" [
     if (last-portfolio = [] or last-portfolio = nobody) [ report 0 ]
-    let total 0
-    foreach last-portfolio [ p -> set total total + cost-of (item 0 p) ]
-    report total
+    ;; Use portfolio-level discounted cost (same formula as compute-portfolio-totals)
+    let tot compute-portfolio-totals last-portfolio
+    report item 0 tot
   ]
   report cost-of key
 end
@@ -363,22 +374,23 @@ end
 
 
 to render-current-table [portfolio]
-  ;; Print a simple table of selections and areas to the output
+  ;; Print a table with economies-of-scale applied to row costs via portfolio-level factors
   output-print "-----------"
   output-print "ID, Area_m2, RES%, NBS%, # Trees, RES_m2, NBS_CO2_kg, NBS_Cost_€, RES_CO2_kg, RES_Cost_€, Total_CO2_kg, Total_Cost_€"
-  ;; accumulators for totals
+  ;; accumulators for totals and row buffering
   let sum_area 0
   let sum_trees 0
   let sum_res_area 0
   let sum_nbs_co2 0
-  let sum_nbs_cost 0
   let sum_res_co2 0
-  let sum_res_cost 0
+  let sum_nbs_cost_base 0
+  let sum_res_cost_base 0
   let sum_total_co2 0
-  let sum_total_cost 0
   let w_sum 0
   let res_w_sum 0
   let nbs_w_sum 0
+  let sum_res_units 0
+  let rows []
 
   foreach portfolio [ p ->
     let bid  item 0 p
@@ -388,7 +400,6 @@ to render-current-table [portfolio]
     let rec  table:get id-table bid   ;; [area cell_type]
     let area item 0 rec
     let ctyp item 1 rec
-    ;; compute per-fragment metrics
     let resI intensity-of "RES"      ;; [cost_per_m2 co2_per_m2]
     let res_cost_m2 item 0 resI
     let res_co2_m2  item 1 resI
@@ -405,52 +416,81 @@ to render-current-table [portfolio]
     ]
     let res_area (area * cov * res)
     let nbs_co2 (trees * co2_reduction_NBS)
-    let nbs_cost (trees * cost_NBS)
+    let nbs_cost0 (trees * cost_NBS)
     let res_co2 (res_area * res_co2_m2)
-    let res_cost (res_area * res_cost_m2)
+    let res_cost0 (res_area * res_cost_m2)
     let total_co2 (nbs_co2 + res_co2)
-    let total_cost (nbs_cost + res_cost)
     ;; accumulate totals
     set sum_area (sum_area + area)
     set sum_trees (sum_trees + trees)
     set sum_res_area (sum_res_area + res_area)
     set sum_nbs_co2 (sum_nbs_co2 + nbs_co2)
-    set sum_nbs_cost (sum_nbs_cost + nbs_cost)
     set sum_res_co2 (sum_res_co2 + res_co2)
-    set sum_res_cost (sum_res_cost + res_cost)
+    set sum_nbs_cost_base (sum_nbs_cost_base + nbs_cost0)
+    set sum_res_cost_base (sum_res_cost_base + res_cost0)
+    if (res_cell_area > 0) [ set sum_res_units (sum_res_units + floor (res_area / res_cell_area)) ]
     set sum_total_co2 (sum_total_co2 + total_co2)
-    set sum_total_cost (sum_total_cost + total_cost)
     let w (area * cov)
     set w_sum (w_sum + w)
     set res_w_sum (res_w_sum + (res * w))
     set nbs_w_sum (nbs_w_sum + (nbs * w))
+    set rows lput (list bid area res nbs trees res_area nbs_co2 nbs_cost0 res_co2 res_cost0 total_co2) rows
+  ]
 
+  ;; Compute portfolio-level discount factors (avoid nested reporters)
+  let gR (ifelse-value (is-number? res_cost_floor) [ res_cost_floor ] [ 1.0 ])
+  let NR (ifelse-value ((is-number? res_discount_units) and (res_discount_units > 0)) [ res_discount_units ] [ 1e30 ])
+  let phiR min (list (sum_res_units / NR) 1)
+  let res_factor (1 - (1 - gR) * phiR)
+  let gN (ifelse-value (is-number? nbs_cost_floor) [ nbs_cost_floor ] [ 1.0 ])
+  let NN (ifelse-value ((is-number? nbs_discount_units) and (nbs_discount_units > 0)) [ nbs_discount_units ] [ 1e30 ])
+  let phiN min (list (sum_trees / NN) 1)
+  let nbs_factor (1 - (1 - gN) * phiN)
+
+  ;; Print rows with discounted per-row costs
+  foreach rows [ r ->
+    let bid       item 0 r
+    let area      item 1 r
+    let res       item 2 r
+    let nbs       item 3 r
+    let trees     item 4 r
+    let res_area  item 5 r
+    let nbs_co2   item 6 r
+    let nbs_cost0 item 7 r
+    let res_co2   item 8 r
+    let res_cost0 item 9 r
+    let total_co2 item 10 r
+    let disc_nbs_cost (nbs_cost0 * nbs_factor)
+    let disc_res_cost (res_cost0 * res_factor)
+    let disc_total_cost (disc_nbs_cost + disc_res_cost)
     output-print (word bid ", " area ", " (precision (res * 100) 2) "% , " (precision (nbs * 100) 2) "% , "
                        trees ", "
                        (precision res_area 2) " m2, "
                        (precision nbs_co2 2) " kg, "
-                       (precision nbs_cost 2) " €, "
+                       (precision disc_nbs_cost 2) " €, "
                        (precision res_co2 2) " kg, "
-                       (precision res_cost 2) " €, "
+                       (precision disc_res_cost 2) " €, "
                        (precision total_co2 2) " kg, "
-                       (precision total_cost 2) " €")
+                       (precision disc_total_cost 2) " €")
   ]
-  ;; print totals row (use same averaging rule as monitors)
-  let avg_res_pct (avg-res-pct)
-  let avg_nbs_pct (avg-nbs-pct)
+
+  ;; Portfolio-level discounted totals (CO2 unchanged)
+  let disc-total-cost ( (sum_res_cost_base * res_factor) + (sum_nbs_cost_base * nbs_factor) )
+  let avg_res_pct (ifelse-value (w_sum > 0) [ (res_w_sum / w_sum) * 100 ] [ 0 ])
+  let avg_nbs_pct (ifelse-value (w_sum > 0) [ (nbs_w_sum / w_sum) * 100 ] [ 0 ])
   output-print ""
-  output-print (word "TOTAL, "
+  output-print (word "TOTAL (discounted), "
                      (precision sum_area 2) ", "
                      (precision avg_res_pct 2) "% , "
                      (precision avg_nbs_pct 2) "% , "
                      sum_trees ", "
                      (precision sum_res_area 2) " m2, "
                      (precision sum_nbs_co2 2) " kg, "
-                     (precision sum_nbs_cost 2) " €, "
+                     (precision (sum_nbs_cost_base * nbs_factor) 2) " €, "
                      (precision sum_res_co2 2) " kg, "
-                     (precision sum_res_cost 2) " €, "
+                     (precision (sum_res_cost_base * res_factor) 2) " €, "
                      (precision sum_total_co2 2) " kg, "
-                     (precision sum_total_cost 2) " €")
+                     (precision disc-total-cost 2) " €")
   output-print ""
   output-print (word "Tick: " ticks "  Cost: " last-total-cost "  CO2: " last-total-co2)
 end

@@ -18,9 +18,16 @@ class Params:
     pct_covered_ground: float = -1.0  # if < 0, falls back to pct_covered_by_NBS_RES
     # Tree layout
     tree_cover_area: float = 5.0          # m2 per tree footprint
+    # PV layout
+    res_cell_area: float = 5.0            # m2 per PV unit
     # Roof structural constraints
     tree_weight: float = 400.0            # kg per tree (approx.)
     max_roof_load: float = 100.0          # kg per m2 maximum allowable load
+    # Economies of scale (floors in [0..1], thresholds in units)
+    res_cost_floor: float = 1.0
+    nbs_cost_floor: float = 1.0
+    res_discount_units: float = 1e30
+    nbs_discount_units: float = 1e30
 
 
 def coverage_for_type(p: Params, cell_type: str) -> float:
@@ -56,4 +63,3 @@ def compute_block_option_metrics(area_m2: float, res_pct: float, nbs_pct: float,
     nbs_co2 = trees * p.co2_nbs
 
     return (res_cost + nbs_cost, res_co2 + nbs_co2)
-

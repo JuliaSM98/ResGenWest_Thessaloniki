@@ -34,3 +34,28 @@ to-report join-with [lst sep]
   report acc
 end
 
+;; Economies-of-scale discount reporters (total-cost based).
+;; Formula: C = (unit_cost * n) * [1 - (1 - floor) * min(n / threshold, 1)]
+;; When floor = 1.0 (default) there is no discount.
+
+to-report discounted-total-cost-res [n-R]
+  ;; n-R = total number of RES units (PV units)
+  if (n-R <= 0) [ report 0 ]
+  let gR (ifelse-value (is-number? res_cost_floor) [ res_cost_floor ] [ 1.0 ])
+  let NR (ifelse-value ((is-number? res_discount_units) and (res_discount_units > 0))
+            [ res_discount_units ] [ 1e30 ])
+  let phi min (list (n-R / NR) 1)
+  let cR0 (cost_RES * res_cell_area)  ;; €/unit = €/m2 * m2/unit
+  report (cR0 * n-R) * (1 - (1 - gR) * phi)
+end
+
+to-report discounted-total-cost-nbs [n-N]
+  ;; n-N = total number of trees across all blocks
+  if (n-N <= 0) [ report 0 ]
+  let gN (ifelse-value (is-number? nbs_cost_floor) [ nbs_cost_floor ] [ 1.0 ])
+  let NN (ifelse-value ((is-number? nbs_discount_units) and (nbs_discount_units > 0))
+            [ nbs_discount_units ] [ 1e30 ])
+  let phi min (list (n-N / NN) 1)
+  let cN0 cost_NBS  ;; €/tree already per unit
+  report (cN0 * n-N) * (1 - (1 - gN) * phi)
+end

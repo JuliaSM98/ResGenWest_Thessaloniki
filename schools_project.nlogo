@@ -31,6 +31,12 @@ globals [
   pct_covered_ground      ;; eligible fraction of ground-floor area (set = pct_covered_by_NBS_RES in setup)
   res_cell_area           ;; PV panel footprint in m2 (default 5; informational for general_analysis)
 
+  ;; Volume-discount — no sliders in this model; set to no-discount defaults in setup
+  res_cost_floor          ;; = 1.0 (no discount)
+  nbs_cost_floor          ;; = 1.0 (no discount)
+  res_discount_units      ;; threshold (set large → effectively no discount)
+  nbs_discount_units      ;; threshold (set large → effectively no discount)
+
   ;; Editable paths (set here or via code)
   options-csv-path        ;; path to options.csv
   shapefile-path          ;; path to shapefile (.shp)

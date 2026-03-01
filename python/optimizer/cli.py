@@ -33,12 +33,65 @@ def build_block_options(blocks, options, params: Params) -> Tuple[List[List[Tupl
     return block_opts, block_opt_refs
 
 
+def discount_factor(floor: float, n: float, N: float) -> float:
+    """Economies-of-scale factor: 1 - (1 - floor) * min(n/N, 1)."""
+    if N <= 0:
+        return 1.0
+    phi = min(max(0.0, n) / N, 1.0)
+    return 1.0 - (1.0 - floor) * phi
+
+
 def write_csv(out_path: str, points: Sequence[Tuple[float, float]], n_blocks: int) -> None:
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     with open(out_path, 'w') as f:
         f.write('cost,co2,n_blocks\n')
         for c, z in points:
             f.write(f"{c:.6f},{z:.6f},{n_blocks}\n")
+
+
+def compute_counts_for_selection(blocks, block_options: List[List[Options]], selection: Sequence[int], params: Params) -> Tuple[int, int, float]:
+    """Return (n_res_units, n_trees, total_res_area_m2) for a selection."""
+    total_res_area = 0.0
+    total_trees = 0
+    for i, choice_idx in enumerate(selection):
+        b = blocks[i]
+        area = float(b['area_m2'])
+        cell_type = (b.get('cell_type') or '').strip().lower()
+        o = block_options[i][choice_idx]
+        res_pct = max(0.0, o.res_pct)
+        nbs_pct = max(0.0, o.nbs_pct)
+        cov = coverage_for_type(params, cell_type)
+        res_area = area * cov * res_pct
+        eff_nbs_area = area * cov * nbs_pct
+        trees = int(eff_nbs_area // max(1e-9, params.tree_cover_area))
+        if cell_type == 'roof' and params.tree_weight > 0:
+            load_cap = int((eff_nbs_area * params.max_roof_load) // params.tree_weight)
+            if trees > load_cap:
+                trees = load_cap
+        total_res_area += res_area
+        total_trees += trees
+    n_res_units = int(total_res_area // max(1e-9, params.res_cell_area))
+    return n_res_units, total_trees, total_res_area
+
+
+def write_points_with_counts(out_path: str, points: Sequence[Tuple[float, float]], counts: Sequence[Tuple], n_blocks: int, params: 'Params' = None) -> None:
+    """counts entries are (n_res_units, n_trees) or (n_res_units, n_trees, total_res_area_m2)."""
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    with open(out_path, 'w') as f:
+        f.write('cost,co2,n_blocks,n_res_units,n_trees,cost_discounted\n')
+        for (c, z), cnt in zip(points, counts):
+            nru, nt = cnt[0], cnt[1]
+            res_area = cnt[2] if len(cnt) > 2 else nru * (params.res_cell_area if params else 1.0)
+            if params is not None:
+                rf = discount_factor(params.res_cost_floor, float(nru), float(params.res_discount_units))
+                nf = discount_factor(params.nbs_cost_floor, float(nt),  float(params.nbs_discount_units))
+                # Use continuous res_area for cost base (consistent with per-block table)
+                c_res_base = res_area * params.cost_res
+                c_nbs_base = nt * params.cost_nbs
+                cost_disc = c_res_base * rf + c_nbs_base * nf
+            else:
+                cost_disc = c
+            f.write(f"{c:.6f},{z:.6f},{n_blocks},{nru},{nt},{cost_disc:.6f}\n")
 
 
 def write_selections_csv(path: str, solution_id: int, point: Tuple[float, float], blocks, block_options: List[List[Options]], selection: Sequence[int]) -> None:
@@ -54,57 +107,76 @@ def write_selections_csv(path: str, solution_id: int, point: Tuple[float, float]
 
 
 def write_table_csv(path: str, blocks, block_options: List[List[Options]], selection: Sequence[int], params: Params) -> None:
-    """Write a detailed table matching NetLogo's render-current-table output."""
+    """Write a detailed table with economies-of-scale applied per row via portfolio-level factors."""
     os.makedirs(os.path.dirname(path), exist_ok=True)
+    # First pass: compute per-row base metrics and accumulate totals/units
+    rows = []
+    sum_area = 0.0
+    sum_trees = 0
+    sum_res_area = 0.0
+    sum_nbs_co2 = 0.0
+    sum_res_co2 = 0.0
+    sum_nbs_cost_base = 0.0
+    sum_res_cost_base = 0.0
+    sum_total_co2 = 0.0
+    res_pct_sum = nbs_pct_sum = 0.0
+    total_res_units = 0
+    n = len(blocks)
+    for i, choice_idx in enumerate(selection):
+        b = blocks[i]
+        area = float(b['area_m2'])
+        cell_type = (b.get('cell_type') or '').strip().lower()
+        o = block_options[i][choice_idx]
+        res_pct = max(0.0, o.res_pct)
+        nbs_pct = max(0.0, o.nbs_pct)
+        cov = coverage_for_type(params, cell_type)
+        res_area = area * cov * res_pct
+        eff_nbs_area = area * cov * nbs_pct
+        trees = int(eff_nbs_area // max(1e-9, params.tree_cover_area))
+        if cell_type == 'roof' and params.tree_weight > 0:
+            load_cap = int((eff_nbs_area * params.max_roof_load) // params.tree_weight)
+            if trees > load_cap:
+                trees = load_cap
+        nbs_co2 = trees * params.co2_nbs
+        nbs_cost0 = trees * params.cost_nbs
+        res_co2 = res_area * params.co2_res
+        res_cost0 = res_area * params.cost_res
+        total_co2 = nbs_co2 + res_co2
+        sum_area += area
+        sum_trees += trees
+        sum_res_area += res_area
+        sum_nbs_co2 += nbs_co2
+        sum_res_co2 += res_co2
+        sum_nbs_cost_base += nbs_cost0
+        sum_res_cost_base += res_cost0
+        total_res_units += int(res_area // max(1e-9, params.res_cell_area))
+        sum_total_co2 += total_co2
+        res_pct_sum += (res_pct * 100.0)
+        nbs_pct_sum += (nbs_pct * 100.0)
+        rows.append((b.get('block'), area, res_pct, nbs_pct, trees, res_area, nbs_co2, nbs_cost0, res_co2, res_cost0, total_co2))
+
+    # Portfolio-level discount factors
+    res_factor = discount_factor(params.res_cost_floor, float(total_res_units), float(params.res_discount_units))
+    nbs_factor = discount_factor(params.nbs_cost_floor, float(sum_trees), float(params.nbs_discount_units))
+
     with open(path, 'w') as f:
         f.write('ID, Area_m2, RES%, NBS%, # Trees, RES_m2, NBS_CO2_kg, NBS_Cost_€, RES_CO2_kg, RES_Cost_€, Total_CO2_kg, Total_Cost_€\n')
-        sum_area = sum_trees = 0.0
-        sum_res_area = sum_nbs_co2 = sum_nbs_cost = 0.0
-        sum_res_co2 = sum_res_cost = 0.0
-        sum_total_co2 = sum_total_cost = 0.0
-        res_pct_sum = nbs_pct_sum = 0.0
-        n = len(blocks)
-        for i, choice_idx in enumerate(selection):
-            b = blocks[i]
-            area = float(b['area_m2'])
-            cell_type = (b.get('cell_type') or '').strip().lower()
-            o = block_options[i][choice_idx]
-            res_pct = max(0.0, o.res_pct)
-            nbs_pct = max(0.0, o.nbs_pct)
-            cov = coverage_for_type(params, cell_type)
-            res_area = area * cov * res_pct
-            eff_nbs_area = area * cov * nbs_pct
-            trees = int(eff_nbs_area // max(1e-9, params.tree_cover_area))
-            if cell_type == 'roof' and params.tree_weight > 0:
-                load_cap = int((eff_nbs_area * params.max_roof_load) // params.tree_weight)
-                if trees > load_cap:
-                    trees = load_cap
-            nbs_co2 = trees * params.co2_nbs
-            nbs_cost = trees * params.cost_nbs
-            res_co2 = res_area * params.co2_res
-            res_cost = res_area * params.cost_res
-            total_co2 = nbs_co2 + res_co2
-            total_cost = nbs_cost + res_cost
-            sum_area += area
-            sum_trees += trees
-            sum_res_area += res_area
-            sum_nbs_co2 += nbs_co2
-            sum_nbs_cost += nbs_cost
-            sum_res_co2 += res_co2
-            sum_res_cost += res_cost
-            sum_total_co2 += total_co2
-            sum_total_cost += total_cost
-            res_pct_sum += (res_pct * 100.0)
-            nbs_pct_sum += (nbs_pct * 100.0)
+        for (block_key, area, res_pct, nbs_pct, trees, res_area, nbs_co2, nbs_cost0, res_co2, res_cost0, total_co2) in rows:
+            disc_nbs_cost = nbs_cost0 * nbs_factor
+            disc_res_cost = res_cost0 * res_factor
+            disc_total_cost = disc_nbs_cost + disc_res_cost
             f.write(
-                f"{b.get('block')}, {area:.6f}, {res_pct*100.0:.2f}%, {nbs_pct*100.0:.2f}%, {trees}, "
-                f"{res_area:.2f} m2, {nbs_co2:.2f} kg, {nbs_cost:.2f} €, {res_co2:.2f} kg, {res_cost:.2f} €, {total_co2:.2f} kg, {total_cost:.2f} €\n"
+                f"{block_key}, {area:.6f}, {res_pct*100.0:.2f}%, {nbs_pct*100.0:.2f}%, {trees}, "
+                f"{res_area:.2f} m2, {nbs_co2:.2f} kg, {disc_nbs_cost:.2f} €, {res_co2:.2f} kg, {disc_res_cost:.2f} €, {total_co2:.2f} kg, {disc_total_cost:.2f} €\n"
             )
         avg_res_pct = (res_pct_sum / n) if n > 0 else 0.0
         avg_nbs_pct = (nbs_pct_sum / n) if n > 0 else 0.0
+        disc_nbs_total = sum_nbs_cost_base * nbs_factor
+        disc_res_total = sum_res_cost_base * res_factor
+        disc_total = disc_nbs_total + disc_res_total
         f.write(
-            f"TOTAL, {sum_area:.2f}, {avg_res_pct:.2f}%, {avg_nbs_pct:.2f}%, {int(sum_trees)}, "
-            f"{sum_res_area:.2f} m2, {sum_nbs_co2:.2f} kg, {sum_nbs_cost:.2f} €, {sum_res_co2:.2f} kg, {sum_res_cost:.2f} €, {sum_total_co2:.2f} kg, {sum_total_cost:.2f} €\n"
+            f"TOTAL (discounted), {sum_area:.2f}, {avg_res_pct:.2f}%, {avg_nbs_pct:.2f}%, {int(sum_trees)}, "
+            f"{sum_res_area:.2f} m2, {sum_nbs_co2:.2f} kg, {disc_nbs_total:.2f} €, {sum_res_co2:.2f} kg, {disc_res_total:.2f} €, {sum_total_co2:.2f} kg, {disc_total:.2f} €\n"
         )
 
 
@@ -152,7 +224,7 @@ def main() -> None:
     # Mode: frontier (steps) or single solve under budget
     ap.add_argument('--mode', choices=['frontier-steps', 'max-co2-under-budget', 'min-cost-above-co2', 'both-constraints'], default='frontier-steps', help='Solve mode')
     # OR-Tools budget frontier parameters (steps only)
-    ap.add_argument('--budget-steps', type=int, default=41, help='Number of budget samples (>=2)')
+    ap.add_argument('--budget-steps', type=int, default=0, help='Number of budget samples (>=2); 0 = auto-compute from problem size')
     ap.add_argument('--max-pct-res', type=float, default=100.0, help='Max % RES option allowed (0..100)')
     ap.add_argument('--max-pct-nbs', type=float, default=100.0, help='Max % NBS option allowed (0..100)')
 
@@ -167,6 +239,12 @@ def main() -> None:
     ap.add_argument('--tree-cover-area', type=float, default=5.0)
     ap.add_argument('--tree-weight', type=float, default=400.0)
     ap.add_argument('--max-roof-load', type=float, default=100.0)
+    ap.add_argument('--res-cell-area', type=float, default=5.0)
+    # Economies of scale
+    ap.add_argument('--res-cost-floor', type=float, default=1.0)
+    ap.add_argument('--nbs-cost-floor', type=float, default=1.0)
+    ap.add_argument('--res-discount-units', type=float, default=1e30)
+    ap.add_argument('--nbs-discount-units', type=float, default=1e30)
 
     ap.add_argument('--budget-max', type=float, default=None, help='Budget limit in euros (required for max-co2-under-budget or both-constraints)')
     ap.add_argument('--co2-min', type=float, default=None, help='CO2 limit in kg (required for min-cost-above-co2 or both-constraints)')
@@ -190,6 +268,11 @@ def main() -> None:
         tree_cover_area=args.tree_cover_area,
         tree_weight=args.tree_weight,
         max_roof_load=args.max_roof_load,
+        res_cell_area=args.res_cell_area,
+        res_cost_floor=args.res_cost_floor,
+        nbs_cost_floor=args.nbs_cost_floor,
+        res_discount_units=args.res_discount_units,
+        nbs_discount_units=args.nbs_discount_units,
     )
     print("Params:", params)
     blocks = load_uncovered_blocks(args.uncovered_dir)
@@ -310,15 +393,23 @@ def main() -> None:
     # Default: frontier by uniform budget steps
     min_budget = sum(min(c for (c, _) in opts) for opts in int_block_opts)
     max_budget = sum(max(c for (c, _) in opts) for opts in int_block_opts)
+    # Auto budget steps: 3× total options across all blocks, clamped to [20, 300]
+    if args.budget_steps <= 0:
+        n_options_total = sum(len(opts) for opts in int_block_opts)
+        budget_steps = max(20, min(300, n_options_total * 3))
+        print(f"Auto budget-steps: {budget_steps} (from {n_options_total} total options)")
+    else:
+        budget_steps = args.budget_steps
     res = frontier_by_budget_steps(
         int_block_opts,
         min_budget,
         max_budget,
-        steps=max(args.budget_steps, 2),
+        steps=max(budget_steps, 2),
     )
-    # Convert back to floats
+    # Convert back to floats and compute unit counts per selection
     points = [(c / scale.cost, z / scale.co2) for (c, z, _sel) in res]
     selections = [sel for (_c, _z, sel) in res]
+    counts = [compute_counts_for_selection(blocks, block_opt_refs, sel, params) for sel in selections]
     meta = {
         'mode': 'frontier-steps',
         'budget_steps': args.budget_steps,
@@ -331,7 +422,7 @@ def main() -> None:
         'blocks': blocks,
     }
 
-    write_csv(args.out, points, n_blocks=len(blocks))
+    write_points_with_counts(args.out, points, counts, n_blocks=len(blocks), params=params)
     if args.portfolios_out:
         os.makedirs(os.path.dirname(args.portfolios_out), exist_ok=True)
         with open(args.portfolios_out, 'w') as f:

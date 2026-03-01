@@ -14,6 +14,10 @@ to setup-core [options-path-arg shapefile-path-arg]
   ;; Models without slider widgets for these (e.g. general_analysis.nlogo) need explicit defaults.
   if max_pct_RES = 0 [ set max_pct_RES 100 ]
   if max_pct_NBS = 0 [ set max_pct_NBS 100 ]
+  ;; Discount globals: clear-all resets code globals to 0; sliders restore themselves.
+  ;; Models without discount sliders need these guards so the reporters default to no-discount.
+  if res_cost_floor = 0 [ set res_cost_floor 1.0 ]
+  if nbs_cost_floor = 0 [ set nbs_cost_floor 1.0 ]
 
   ;; Updated shapefile path (aggregates areas per block and cell type)
   load-shapefile _sf
@@ -37,6 +41,10 @@ to go-core
 
   let portfolio portfolio-from-index combo-index
   let tot compute-portfolio-totals portfolio
+  ;; persist for monitors and output table footer
+  set last-portfolio portfolio
+  set last-total-cost item 0 tot
+  set last-total-co2  item 1 tot
 
   ;; print current selection table (appears if an Output widget is present) when enabled via switch
   if print-tables [

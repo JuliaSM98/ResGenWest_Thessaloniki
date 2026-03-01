@@ -34,6 +34,15 @@ globals [
   ;; Computed in setup as average of pct_covered_roof and pct_covered_ground.
   pct_covered_by_NBS_RES
 
+  ;; Volume-discount (economies of scale) — also sliders in this model
+  ;; res_cost_floor    slider: minimum cost fraction for RES (1.0 = no discount)
+  ;; nbs_cost_floor    slider: minimum cost fraction for NBS (1.0 = no discount)
+  ;; res_discount_units slider: RES m2 threshold for full discount
+  ;; nbs_discount_units slider: NBS tree threshold for full discount
+
+  ;; Optimizer
+  budget_steps            ;; 0 = auto-compute in Python (default); set > 0 to override
+
   ;; Editable paths (set here or via code)
   options-csv-path        ;; path to options.csv
   shapefile-path          ;; path to shapefile (.shp)
@@ -82,6 +91,11 @@ to reset-defaults
   set co2_reduction_RES      71
   set print-tables           false
   set res_kw_per_m2          0.2
+  ;; Volume discount (economies of scale)
+  set res_cost_floor         0.75
+  set nbs_cost_floor         0.50
+  set res_discount_units     100
+  set nbs_discount_units     100
   ;; Optimizer controls
   set budget-max            10000000
   set co2-min               0
@@ -89,7 +103,6 @@ to reset-defaults
   set options-csv-path       "data/csv/options.csv"
   set shapefile-path         "data/shapefiles/general/one_school_building.shp"
   set outputs_base           "data/outputs/general"
-  if is-number? budget_steps [ set budget_steps 41 ]
 end
 
 to show-table-file [path]
@@ -122,13 +135,13 @@ to show-both-table
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
+732
+243
+1103
 615
-253
-937
-576
 -1
 -1
-9.52
+11.0
 1
 10
 1
@@ -200,10 +213,10 @@ NIL
 1
 
 PLOT
-990
-10
-1346
-197
+1111
+241
+1467
+428
 Cost vs CO2
 Cost (€)
 CO2 (Kg)
@@ -224,16 +237,16 @@ SWITCH
 58
 print-tables
 print-tables
-1
+0
 1
 -1000
 
 TEXTBOX
 21
 67
-133
-85
-Assumptions:
+166
+95
+Installation assumptions:
 11
 0.0
 1
@@ -269,40 +282,40 @@ cost_NBS
 HORIZONTAL
 
 SLIDER
-376
-88
-563
-121
-pct_covered_roof
-pct_covered_roof
-0
-100
-70.0
-1
-1
-%
-HORIZONTAL
-
-SLIDER
-568
-88
-757
-121
-pct_covered_ground
-pct_covered_ground
-0
-100
-50.0
-1
-1
-%
-HORIZONTAL
-
-SLIDER
 16
-133
-272
-166
+230
+203
+263
+pct_covered_roof
+pct_covered_roof
+0
+100
+100.0
+1
+1
+%
+HORIZONTAL
+
+SLIDER
+208
+230
+397
+263
+pct_covered_ground
+pct_covered_ground
+0
+100
+100.0
+1
+1
+%
+HORIZONTAL
+
+SLIDER
+375
+87
+591
+120
 co2_reduction_RES
 co2_reduction_RES
 0
@@ -314,10 +327,10 @@ kg/(m2·year)
 HORIZONTAL
 
 SLIDER
-286
-134
-548
-167
+600
+87
+826
+120
 co2_reduction_NBS
 co2_reduction_NBS
 0
@@ -329,10 +342,10 @@ kg/(tree·year)
 HORIZONTAL
 
 SLIDER
-554
-135
-710
-168
+832
+87
+1007
+120
 tree_cover_area
 tree_cover_area
 1
@@ -344,10 +357,10 @@ m2/tree
 HORIZONTAL
 
 SLIDER
-714
-135
-870
-168
+1011
+87
+1167
+120
 res_cell_area
 res_cell_area
 0.5
@@ -359,10 +372,10 @@ m2/cell
 HORIZONTAL
 
 SLIDER
-192
-176
-379
-209
+1320
+19
+1458
+52
 res_kw_per_m2
 res_kw_per_m2
 0
@@ -374,10 +387,10 @@ kW/m2
 HORIZONTAL
 
 SLIDER
-385
-177
-513
-210
+401
+231
+529
+264
 tree_weight
 tree_weight
 5
@@ -389,10 +402,10 @@ kg
 HORIZONTAL
 
 SLIDER
-518
-177
-687
-210
+534
+231
+703
+264
 max_roof_load
 max_roof_load
 10
@@ -404,35 +417,90 @@ kg/m2
 HORIZONTAL
 
 TEXTBOX
+22
+136
+260
+154
+Volume discount (economies of scale):
+11
+0.0
+1
+
+SLIDER
+19
+156
+298
+189
+res_cost_floor
+res_cost_floor
+0.5
+1.0
+0.75
+0.01
+1
+RES min cost fraction (γ_R)
+HORIZONTAL
+
+SLIDER
+302
+156
+582
+189
+nbs_cost_floor
+nbs_cost_floor
+0.1
+1.0
+0.5
+0.01
+1
+NBS min cost fraction (γ_N)
+HORIZONTAL
+
+SLIDER
+589
+156
+850
+189
+res_discount_units
+res_discount_units
+1
+2000
+667.0
+1
+1
+PV units threshold
+HORIZONTAL
+
+SLIDER
+854
+156
+1133
+189
+nbs_discount_units
+nbs_discount_units
+1
+2000
+614.0
+1
+1
+Tree units threshold
+HORIZONTAL
+
+TEXTBOX
 17
-220
+275
 167
-238
+293
 Optimal solution
 11
 0.0
 1
 
 SLIDER
-14
-175
-186
-208
-budget_steps
-budget_steps
-2
-200
-41.0
-1
-1
-steps
-HORIZONTAL
-
-SLIDER
 13
-246
+301
 200
-279
+334
 budget-max
 budget-max
 0
@@ -445,9 +513,9 @@ HORIZONTAL
 
 SLIDER
 14
-284
+339
 199
-317
+372
 co2-min
 co2-min
 0
@@ -460,11 +528,11 @@ HORIZONTAL
 
 BUTTON
 205
-246
+301
 412
-281
+336
 optimizer with budget
-run-optimizer-under-budget-and-plot\n    "python"\n    shapefile-path\n    options-csv-path\n    "data/outputs/general/solve_under_budget.csv"\nshow-solution-table
+run-optimizer-under-budget-and-plot\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/general/solve_under_budget.csv\"\nshow-solution-table
 NIL
 1
 T
@@ -477,11 +545,11 @@ NIL
 
 BUTTON
 206
-286
+341
 414
-319
+374
 optimizer with CO2
-run-optimizer-above-co2-and-save\n    "python"\n    shapefile-path\n    options-csv-path\n    "data/outputs/general/solve_above_co2.csv"\nshow-co2-table
+run-optimizer-above-co2-and-save\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/general/solve_above_co2.csv\"\nshow-co2-table
 NIL
 1
 T
@@ -494,11 +562,11 @@ NIL
 
 BUTTON
 424
-266
+321
 558
-299
+354
 optimizer with both
-run-optimizer-both-constraints\n    "python"\n    shapefile-path\n    options-csv-path\n    "data/outputs/general/solve_both_constraints.csv"\nshow-both-table
+run-optimizer-both-constraints\n    \"python\"\n    shapefile-path\n    options-csv-path\n    \"data/outputs/general/solve_both_constraints.csv\"\nshow-both-table
 NIL
 1
 T
@@ -515,7 +583,7 @@ BUTTON
 630
 59
 Run Cost vs CO2 curve
-        run-optimizer-and-plot\n        "python"\n        shapefile-path\n        options-csv-path\n        "data/outputs/general/pareto_uncovered_ortools.csv"\n        "steps"\n        41
+        run-optimizer-and-plot\n        \"python\"\n        shapefile-path\n        options-csv-path\n        \"data/outputs/general/pareto_uncovered_ortools.csv\"\n        \"steps\"\n        41
 NIL
 1
 T
@@ -527,10 +595,10 @@ NIL
 1
 
 PLOT
-991
-204
-1347
-384
+1112
+435
+1468
+615
 Cost vs CO2 (Python)
 Cost (€)
 CO2 (kg
@@ -546,20 +614,30 @@ PENS
 
 TEXTBOX
 16
-332
+387
 166
-350
+405
 Output:\n
 11
 0.0
 1
 
 OUTPUT
-15
-349
-610
-555
+5
+406
+725
+612
 11
+
+TEXTBOX
+16
+209
+166
+227
+Constraint Conditions:
+11
+0.0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?

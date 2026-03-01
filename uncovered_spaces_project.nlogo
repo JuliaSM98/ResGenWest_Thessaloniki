@@ -39,6 +39,12 @@ globals [
   pct_covered_roof        ;; eligible fraction of rooftop area (set = pct_covered_by_NBS_RES in setup)
   pct_covered_ground      ;; eligible fraction of ground-floor area (set = pct_covered_by_NBS_RES in setup)
   res_cell_area           ;; PV panel footprint in m2 (default 5; informational for general_analysis)
+
+  ;; Required by shared modules; no sliders here — core.nls sets them to no-discount defaults
+  res_cost_floor
+  nbs_cost_floor
+  res_discount_units
+  nbs_discount_units
 ]
 
 to setup
