@@ -384,6 +384,104 @@ to-report res-kw-of-any [key]
 end
 
 
+to export-solution-csv [path]
+  ;; Write the TOTAL row of the current portfolio to a CSV file for comparison.
+  if (last-portfolio = [] or last-portfolio = nobody) [
+    print "WARNING: no current portfolio to export"
+    stop
+  ]
+  ;; Accumulate TOTAL metrics (mirrors render-current-table TOTAL row)
+  let sum_area 0
+  let sum_trees 0
+  let sum_res_area 0
+  let sum_nbs_co2 0
+  let sum_res_co2 0
+  let sum_nbs_cost_base 0
+  let sum_res_cost_base 0
+  let w_sum 0
+  let res_w_sum 0
+  let nbs_w_sum 0
+  foreach last-portfolio [ p ->
+    let bid  item 0 p
+    let opt  item 1 p
+    let res  item 0 opt
+    let nbs  item 1 opt
+    let rec  table:get id-table bid
+    let area item 0 rec
+    let ctyp item 1 rec
+    let resI intensity-of "RES"
+    let res_cost_m2 item 0 resI
+    let res_co2_m2  item 1 resI
+    let cov (coverage-of-type ctyp)
+    let eff_nbs_area (area * cov * nbs)
+    let trees (ifelse-value (tree_cover_area > 0)
+                 [ floor (eff_nbs_area / tree_cover_area) ]
+                 [ 0 ])
+    if (ctyp = "roof") [
+      if (tree_weight > 0) [
+        let load_cap floor ((eff_nbs_area * max_roof_load) / tree_weight)
+        if trees > load_cap [ set trees load_cap ]
+      ]
+    ]
+    let raw_res_area (area * cov * res)
+    let n_pv (ifelse-value (res_unit_area > 0) [ floor (raw_res_area / res_unit_area) ] [ 0 ])
+    let res_area (n_pv * res_unit_area)
+    set sum_area       (sum_area + area)
+    set sum_trees      (sum_trees + trees)
+    set sum_res_area   (sum_res_area + res_area)
+    set sum_nbs_co2    (sum_nbs_co2    + (trees * co2_reduction_NBS))
+    set sum_res_co2    (sum_res_co2    + (res_area * res_co2_m2))
+    set sum_nbs_cost_base (sum_nbs_cost_base + (trees * cost_NBS))
+    set sum_res_cost_base (sum_res_cost_base + (res_area * res_cost_m2))
+    let w (area * cov)
+    set w_sum     (w_sum + w)
+    set res_w_sum (res_w_sum + (res * w))
+    set nbs_w_sum (nbs_w_sum + (nbs * w))
+  ]
+  let kwp_m2 (ifelse-value (res_unit_area > 0) [ res_kwp_per_unit / res_unit_area ] [ 0 ])
+  let gR (ifelse-value (is-number? res_cost_discount) [ res_cost_discount ] [ 1.0 ])
+  let NR (ifelse-value ((is-number? res_discount_kw) and (res_discount_kw > 0)) [ res_discount_kw ] [ 1e30 ])
+  let phiR min (list ((sum_res_area * kwp_m2) / NR) 1)
+  let res_factor (1 - (1 - gR) * phiR)
+  let gN (ifelse-value (is-number? nbs_cost_discount) [ nbs_cost_discount ] [ 1.0 ])
+  let NN (ifelse-value ((is-number? nbs_discount_units) and (nbs_discount_units > 0)) [ nbs_discount_units ] [ 1e30 ])
+  let phiN min (list (sum_trees / NN) 1)
+  let nbs_factor (1 - (1 - gN) * phiN)
+  let avg_res_pct (ifelse-value (w_sum > 0) [ (res_w_sum / w_sum) * 100 ] [ 0 ])
+  let avg_nbs_pct (ifelse-value (w_sum > 0) [ (nbs_w_sum / w_sum) * 100 ] [ 0 ])
+  let disc_nbs_cost (sum_nbs_cost_base * nbs_factor)
+  let disc_res_cost (sum_res_cost_base * res_factor)
+  let disc_total    (disc_nbs_cost + disc_res_cost)
+  let sum_total_co2 (sum_nbs_co2 + sum_res_co2)
+  let sum_res_kw (sum_res_area * kwp_m2)
+  ;; Reset file at the start of each run (ticks <= 1 means setup just ran)
+  if (ticks <= 1) [ carefully [ file-delete path ] [] ]
+  let write-header? (not file-exists? path)
+  file-open path
+  if write-header? [
+    file-print "Tick, Area_m2, RES%, NBS%, # Trees, RES_kw, NBS_CO2_kg, NBS_Cost_€, RES_CO2_kg, RES_Cost_€, Total_CO2_kg, Total_Cost_€"
+  ]
+  file-print (word
+    ticks ", "
+    (precision sum_area 2) ", "
+    (precision avg_res_pct 2) ", "
+    (precision avg_nbs_pct 2) ", "
+    sum_trees ", "
+    (precision sum_res_kw 2) ", "
+    (precision sum_nbs_co2 2) ", "
+    (precision disc_nbs_cost 2) ", "
+    (precision sum_res_co2 2) ", "
+    (precision disc_res_cost 2) ", "
+    (precision sum_total_co2 2) ", "
+    (precision disc_total 2))
+  file-close
+end
+
+to reset-solution-csv [path]
+  ;; Call this from setup to start a fresh file for each new run
+  carefully [ file-delete path ] []
+end
+
 to render-current-table [portfolio]
   ;; Print a table with economies-of-scale applied to row costs via portfolio-level factors
   output-print "-----------"
@@ -507,4 +605,5 @@ to render-current-table [portfolio]
                      (precision disc-total-cost 2) " €")
   output-print ""
   output-print (word "Tick: " ticks "  Cost: " last-total-cost "  CO2: " last-total-co2)
+  export-solution-csv (join-path outputs-base-dir "netlogo_solution.csv")
 end

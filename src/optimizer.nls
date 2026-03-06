@@ -353,6 +353,7 @@ to write-optimizer-args [path uncovered-dir options-csv budget-mode budget-steps
   if is-number? nbs_cost_discount    [ file-print (word "--nbs-cost-discount="    nbs_cost_discount) ]
   if is-number? res_discount_kw [ file-print (word "--res-discount-kw=" res_discount_kw) ]
   if is-number? nbs_discount_units [ file-print (word "--nbs-discount-units=" nbs_discount_units) ]
+  file-print (word "--pareto-summary-out=" (join-path outputs-base-dir "pareto_summary.csv"))
   file-close
 end
 

@@ -188,6 +188,61 @@ def write_table_csv(path: str, blocks, block_options: List[List[Options]], selec
         )
 
 
+def write_pareto_summary_csv(path: str, blocks, block_options: List[List[Options]], selections: Sequence[Sequence[int]], params: 'Params') -> None:
+    """Write one TOTAL row per pareto solution — same columns as NetLogo's TOTAL export."""
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    kwp_per_m2 = params.res_kwp_per_unit / params.res_unit_area if params.res_unit_area > 0 else 0.0
+    with open(path, 'w') as f:
+        f.write('Area_m2, RES%, NBS%, # Trees, RES_kw, NBS_CO2_kg, NBS_Cost_€, RES_CO2_kg, RES_Cost_€, Total_CO2_kg, Total_Cost_€\n')
+        for sel in selections:
+            sum_area = 0.0
+            sum_trees = 0
+            sum_res_area = sum_nbs_co2 = sum_res_co2 = 0.0
+            sum_nbs_cost_base = sum_res_cost_base = 0.0
+            w_sum = res_w_sum = nbs_w_sum = 0.0
+            for i, choice_idx in enumerate(sel):
+                b = blocks[i]
+                area = float(b['area_m2'])
+                cell_type = (b.get('cell_type') or '').strip().lower()
+                o = block_options[i][choice_idx]
+                res_pct = max(0.0, o.res_pct)
+                nbs_pct = max(0.0, o.nbs_pct)
+                cov = coverage_for_type(params, cell_type)
+                raw_res_area = area * cov * res_pct
+                pv_units = int(raw_res_area // max(1e-9, params.res_unit_area))
+                res_area = pv_units * params.res_unit_area
+                eff_nbs_area = area * cov * nbs_pct
+                trees = int(eff_nbs_area // max(1e-9, params.tree_cover_area))
+                if cell_type == 'roof' and params.tree_weight > 0:
+                    load_cap = int((eff_nbs_area * params.max_roof_load) // params.tree_weight)
+                    if trees > load_cap:
+                        trees = load_cap
+                sum_area += area
+                sum_trees += trees
+                sum_res_area += res_area
+                sum_nbs_co2 += trees * params.co2_nbs
+                sum_res_co2 += res_area * params.co2_res
+                sum_nbs_cost_base += trees * params.cost_nbs
+                sum_res_cost_base += res_area * params.cost_res
+                w = area * cov
+                w_sum += w
+                res_w_sum += res_pct * w
+                nbs_w_sum += nbs_pct * w
+            sum_res_kw = sum_res_area * kwp_per_m2
+            res_factor = discount_factor(params.res_cost_discount, sum_res_kw, float(params.res_discount_kw))
+            nbs_factor = discount_factor(params.nbs_cost_discount, float(sum_trees), float(params.nbs_discount_units))
+            disc_nbs = sum_nbs_cost_base * nbs_factor
+            disc_res = sum_res_cost_base * res_factor
+            avg_res_pct = (res_w_sum / w_sum * 100.0) if w_sum > 0 else 0.0
+            avg_nbs_pct = (nbs_w_sum / w_sum * 100.0) if w_sum > 0 else 0.0
+            sum_total_co2 = sum_nbs_co2 + sum_res_co2
+            f.write(
+                f"{sum_area:.2f}, {avg_res_pct:.2f}, {avg_nbs_pct:.2f}, {sum_trees}, "
+                f"{sum_res_kw:.2f}, {sum_nbs_co2:.2f}, {disc_nbs:.2f}, {sum_res_co2:.2f}, {disc_res:.2f}, "
+                f"{sum_total_co2:.2f}, {disc_nbs + disc_res:.2f}\n"
+            )
+
+
 def write_single_solution_outputs(
     *,
     args,
@@ -261,6 +316,7 @@ def main() -> None:
     ap.add_argument('--selections-out', default=None, help='Optional CSV with per-block selection indices for the chosen solution')
     ap.add_argument('--table-out', default=None, help='Optional CSV table with per-block metrics and a TOTAL row')
     # Plot options are ignored (kept for compatibility)
+    ap.add_argument('--pareto-summary-out', default=None, help='Optional CSV with one TOTAL row per pareto solution (same columns as NetLogo TOTAL export)')
     ap.add_argument('--plot-out', default=None, help=argparse.SUPPRESS)
     ap.add_argument('--plot-title', default='Cost vs CO2 Frontier', help=argparse.SUPPRESS)
 
@@ -433,6 +489,8 @@ def main() -> None:
     }
 
     write_points_with_counts(args.out, points, counts, n_blocks=len(blocks), params=params)
+    if args.pareto_summary_out:
+        write_pareto_summary_csv(args.pareto_summary_out, blocks, block_opt_refs, selections, params)
     if args.portfolios_out:
         os.makedirs(os.path.dirname(args.portfolios_out), exist_ok=True)
         with open(args.portfolios_out, 'w') as f:
