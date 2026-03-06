@@ -93,19 +93,19 @@ to-report compute-portfolio-totals [portfolio]
     let nbs_co2_total  (trees * co2_reduction_NBS)
 
     set total-res-area total-res-area + res_area
-    if (res_cell_area > 0) [ set total-res-units total-res-units + floor (res_area / res_cell_area) ]
+    if (res_unit_area > 0) [ set total-res-units total-res-units + floor (res_area / res_unit_area) ]
     set total-trees    total-trees    + trees
     set total-co2      total-co2      + res_co2_total + nbs_co2_total
   ]
   ;; Apply portfolio-level economies-of-scale discount to total cost.
   ;; RES cost uses continuous area (consistent with per-block table); phi uses integer units.
-  let gR (ifelse-value (is-number? res_cost_floor) [ res_cost_floor ] [ 1.0 ])
-  let NR (ifelse-value ((is-number? res_discount_units) and (res_discount_units > 0)) [ res_discount_units ] [ 1e30 ])
-  let phiR min (list (total-res-units / NR) 1)
-  let gN (ifelse-value (is-number? nbs_cost_floor) [ nbs_cost_floor ] [ 1.0 ])
+  let kwp_m2 (ifelse-value (res_unit_area > 0) [ res_kwp_per_unit / res_unit_area ] [ 0 ])
+  let gR (ifelse-value (is-number? res_cost_discount) [ res_cost_discount ] [ 1.0 ])
+  let NR (ifelse-value ((is-number? res_discount_kw) and (res_discount_kw > 0)) [ res_discount_kw ] [ 1e30 ])
+  let phiR min (list ((total-res-area * kwp_m2) / NR) 1)
+  let gN (ifelse-value (is-number? nbs_cost_discount) [ nbs_cost_discount ] [ 1.0 ])
   let NN (ifelse-value ((is-number? nbs_discount_units) and (nbs_discount_units > 0)) [ nbs_discount_units ] [ 1e30 ])
   let phiN min (list (total-trees / NN) 1)
-  let kwp_m2 (ifelse-value (res_cell_area > 0) [ res_kwp_per_unit / res_cell_area ] [ 0 ])
   let total-cost ((total-res-area * cost_RES * kwp_m2 * (1 - (1 - gR) * phiR)) + (cost_NBS * total-trees * (1 - (1 - gN) * phiN)))
   report (list total-cost total-co2)
 end
@@ -370,14 +370,14 @@ to-report ratio-res-nbs-any [key]
 end
 
 to-report res-kw-of-any [key]
-  report (ifelse-value (res_cell_area > 0) [ (res-area-of-any key) * res_kwp_per_unit / res_cell_area ] [ 0 ])
+  report (ifelse-value (res_unit_area > 0) [ (res-area-of-any key) * res_kwp_per_unit / res_unit_area ] [ 0 ])
 end
 
 
 to render-current-table [portfolio]
   ;; Print a table with economies-of-scale applied to row costs via portfolio-level factors
   output-print "-----------"
-  output-print "ID, Area_m2, RES%, NBS%, # Trees, RES_m2, NBS_CO2_kg, NBS_Cost_€, RES_CO2_kg, RES_Cost_€, Total_CO2_kg, Total_Cost_€"
+  output-print "ID, Area_m2, RES%, NBS%, # Trees, RES_kw, NBS_CO2_kg, NBS_Cost_€, RES_CO2_kg, RES_Cost_€, Total_CO2_kg, Total_Cost_€"
   ;; accumulators for totals and row buffering
   let sum_area 0
   let sum_trees 0
@@ -429,7 +429,7 @@ to render-current-table [portfolio]
     set sum_res_co2 (sum_res_co2 + res_co2)
     set sum_nbs_cost_base (sum_nbs_cost_base + nbs_cost0)
     set sum_res_cost_base (sum_res_cost_base + res_cost0)
-    if (res_cell_area > 0) [ set sum_res_units (sum_res_units + floor (res_area / res_cell_area)) ]
+    if (res_unit_area > 0) [ set sum_res_units (sum_res_units + floor (res_area / res_unit_area)) ]
     set sum_total_co2 (sum_total_co2 + total_co2)
     let w (area * cov)
     set w_sum (w_sum + w)
@@ -439,11 +439,12 @@ to render-current-table [portfolio]
   ]
 
   ;; Compute portfolio-level discount factors (avoid nested reporters)
-  let gR (ifelse-value (is-number? res_cost_floor) [ res_cost_floor ] [ 1.0 ])
-  let NR (ifelse-value ((is-number? res_discount_units) and (res_discount_units > 0)) [ res_discount_units ] [ 1e30 ])
-  let phiR min (list (sum_res_units / NR) 1)
+  let kwp_m2_rt (ifelse-value (res_unit_area > 0) [ res_kwp_per_unit / res_unit_area ] [ 0 ])
+  let gR (ifelse-value (is-number? res_cost_discount) [ res_cost_discount ] [ 1.0 ])
+  let NR (ifelse-value ((is-number? res_discount_kw) and (res_discount_kw > 0)) [ res_discount_kw ] [ 1e30 ])
+  let phiR min (list ((sum_res_area * kwp_m2_rt) / NR) 1)
   let res_factor (1 - (1 - gR) * phiR)
-  let gN (ifelse-value (is-number? nbs_cost_floor) [ nbs_cost_floor ] [ 1.0 ])
+  let gN (ifelse-value (is-number? nbs_cost_discount) [ nbs_cost_discount ] [ 1.0 ])
   let NN (ifelse-value ((is-number? nbs_discount_units) and (nbs_discount_units > 0)) [ nbs_discount_units ] [ 1e30 ])
   let phiN min (list (sum_trees / NN) 1)
   let nbs_factor (1 - (1 - gN) * phiN)
@@ -466,7 +467,7 @@ to render-current-table [portfolio]
     let disc_total_cost (disc_nbs_cost + disc_res_cost)
     output-print (word bid ", " area ", " (precision (res * 100) 2) "% , " (precision (nbs * 100) 2) "% , "
                        trees ", "
-                       (precision res_area 2) " m2, "
+                       (precision (res_area * kwp_m2_rt) 2) " kWp, "
                        (precision nbs_co2 2) " kg, "
                        (precision disc_nbs_cost 2) " €, "
                        (precision res_co2 2) " kg, "
@@ -485,7 +486,7 @@ to render-current-table [portfolio]
                      (precision avg_res_pct 2) "% , "
                      (precision avg_nbs_pct 2) "% , "
                      sum_trees ", "
-                     (precision sum_res_area 2) " m2, "
+                     (precision (sum_res_area * kwp_m2_rt) 2) " kWp, "
                      (precision sum_nbs_co2 2) " kg, "
                      (precision (sum_nbs_cost_base * nbs_factor) 2) " €, "
                      (precision sum_res_co2 2) " kg, "

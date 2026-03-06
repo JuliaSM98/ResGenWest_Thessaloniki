@@ -16,8 +16,8 @@ to setup-core [options-path-arg shapefile-path-arg]
   if max_pct_NBS = 0 [ set max_pct_NBS 100 ]
   ;; Discount globals: clear-all resets code globals to 0; sliders restore themselves.
   ;; Models without discount sliders need these guards so the reporters default to no-discount.
-  if res_cost_floor = 0 [ set res_cost_floor 1.0 ]
-  if nbs_cost_floor = 0 [ set nbs_cost_floor 1.0 ]
+  if res_cost_discount = 0 [ set res_cost_discount 1.0 ]
+  if nbs_cost_discount = 0 [ set nbs_cost_discount 1.0 ]
 
   ;; Updated shapefile path (aggregates areas per block and cell type)
   load-shapefile _sf

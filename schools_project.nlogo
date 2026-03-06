@@ -29,12 +29,12 @@ globals [
   ;; Per-type coverage — mirrors pct_covered_by_NBS_RES for backward-compat with sampler.nls
   pct_covered_roof        ;; eligible fraction of rooftop area (set = pct_covered_by_NBS_RES in setup)
   pct_covered_ground      ;; eligible fraction of ground-floor area (set = pct_covered_by_NBS_RES in setup)
-  res_cell_area           ;; PV panel footprint in m2 (default 5; informational for general_analysis)
+  res_unit_area           ;; PV panel footprint in m2 (default 5; informational for general_analysis)
 
   ;; Volume-discount — no sliders in this model; set to no-discount defaults in setup
-  res_cost_floor          ;; = 1.0 (no discount)
-  nbs_cost_floor          ;; = 1.0 (no discount)
-  res_discount_units      ;; threshold (set large → effectively no discount)
+  res_cost_discount          ;; = 1.0 (no discount)
+  nbs_cost_discount          ;; = 1.0 (no discount)
+  res_discount_kw      ;; threshold (set large → effectively no discount)
   nbs_discount_units      ;; threshold (set large → effectively no discount)
 
   ;; Editable paths (set here or via code)
@@ -55,7 +55,7 @@ to setup
   ;; Mirror single coverage slider into per-type variables (used by sampler.nls)
   set pct_covered_roof   pct_covered_by_NBS_RES
   set pct_covered_ground pct_covered_by_NBS_RES
-  set res_cell_area      5
+  set res_unit_area      5
   setup-core options-csv-path shapefile-path
   set outputs_base (word "data/outputs/schools")
 end
@@ -79,7 +79,7 @@ to reset-defaults
   set pct_covered_by_NBS_RES 50
   set pct_covered_roof       pct_covered_by_NBS_RES
   set pct_covered_ground     pct_covered_by_NBS_RES
-  set res_cell_area          5
+  set res_unit_area          5
   set cost_NBS               600
   set cost_RES               1200
   set co2_reduction_NBS      25

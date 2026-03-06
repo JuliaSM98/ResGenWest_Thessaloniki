@@ -35,9 +35,9 @@ globals [
   pct_covered_by_NBS_RES
 
   ;; Volume-discount (economies of scale) — also sliders in this model
-  ;; res_cost_floor    slider: minimum cost fraction for RES (1.0 = no discount)
-  ;; nbs_cost_floor    slider: minimum cost fraction for NBS (1.0 = no discount)
-  ;; res_discount_units slider: RES m2 threshold for full discount
+  ;; res_cost_discount    slider: minimum cost fraction for RES (1.0 = no discount)
+  ;; nbs_cost_discount    slider: minimum cost fraction for NBS (1.0 = no discount)
+  ;; res_discount_kw slider: RES m2 threshold for full discount
   ;; nbs_discount_units slider: NBS tree threshold for full discount
 
   ;; Optimizer
@@ -77,7 +77,7 @@ end
 
 to reset-defaults
   set tree_cover_area        5
-  set res_cell_area          5
+  set res_unit_area          5
   set tree_weight            400
   set max_roof_load          100
   set max_pct_RES            100
@@ -92,9 +92,9 @@ to reset-defaults
   set print-tables           false
   set res_kwp_per_unit       1.0
   ;; Volume discount (economies of scale)
-  set res_cost_floor         0.75
-  set nbs_cost_floor         0.50
-  set res_discount_units     100
+  set res_cost_discount         0.75
+  set nbs_cost_discount         0.50
+  set res_discount_kw     100
   set nbs_discount_units     100
   ;; Optimizer controls
   set budget-max            10000000
@@ -361,8 +361,8 @@ SLIDER
 88
 1180
 121
-res_cell_area
-res_cell_area
+res_unit_area
+res_unit_area
 0.5
 20
 5.0
@@ -427,55 +427,55 @@ Volume discount (economies of scale):
 1
 
 SLIDER
-19
-156
-298
-189
-res_cost_floor
-res_cost_floor
+22
+154
+188
+187
+res_cost_discount
+res_cost_discount
 0.5
 1.0
 0.75
 0.01
 1
-RES min cost fraction (γ_R)
+%
 HORIZONTAL
 
 SLIDER
-302
-156
-582
-189
-nbs_cost_floor
-nbs_cost_floor
+193
+154
+366
+187
+nbs_cost_discount
+nbs_cost_discount
 0.1
 1.0
 0.5
 0.01
 1
-NBS min cost fraction (γ_N)
+%
 HORIZONTAL
 
 SLIDER
-589
-156
-850
-189
-res_discount_units
-res_discount_units
+370
+155
+631
+188
+res_discount_kw
+res_discount_kw
 1
 2000
 667.0
 1
 1
-PV units threshold
+kW threshold
 HORIZONTAL
 
 SLIDER
-854
-156
-1133
-189
+635
+155
+914
+188
 nbs_discount_units
 nbs_discount_units
 1

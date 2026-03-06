@@ -40,7 +40,7 @@ end
 to-report intensity-of [action]
   ;; Return [cost_per_m2 co2_per_m2] — convert from per-kWp slider units
   if action = "RES" [
-    let kwp_m2 (ifelse-value (res_cell_area > 0) [ res_kwp_per_unit / res_cell_area ] [ 0 ])
+    let kwp_m2 (ifelse-value (res_unit_area > 0) [ res_kwp_per_unit / res_unit_area ] [ 0 ])
     report (list (cost_RES * kwp_m2) (co2_reduction_RES * kwp_m2))
   ]
   if action = "NBS" [

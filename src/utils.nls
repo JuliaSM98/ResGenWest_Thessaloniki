@@ -41,10 +41,10 @@ end
 to-report discounted-total-cost-res [n-R]
   ;; n-R = total number of RES units (PV units)
   if (n-R <= 0) [ report 0 ]
-  let gR (ifelse-value (is-number? res_cost_floor) [ res_cost_floor ] [ 1.0 ])
-  let NR (ifelse-value ((is-number? res_discount_units) and (res_discount_units > 0))
-            [ res_discount_units ] [ 1e30 ])
-  let phi min (list (n-R / NR) 1)
+  let gR (ifelse-value (is-number? res_cost_discount) [ res_cost_discount ] [ 1.0 ])
+  let NR (ifelse-value ((is-number? res_discount_kw) and (res_discount_kw > 0))
+            [ res_discount_kw ] [ 1e30 ])
+  let phi min (list ((n-R * res_kwp_per_unit) / NR) 1)
   let cR0 (cost_RES * res_kwp_per_unit)  ;; €/unit = €/kWp * kWp/unit
   report (cR0 * n-R) * (1 - (1 - gR) * phi)
 end
@@ -52,7 +52,7 @@ end
 to-report discounted-total-cost-nbs [n-N]
   ;; n-N = total number of trees across all blocks
   if (n-N <= 0) [ report 0 ]
-  let gN (ifelse-value (is-number? nbs_cost_floor) [ nbs_cost_floor ] [ 1.0 ])
+  let gN (ifelse-value (is-number? nbs_cost_discount) [ nbs_cost_discount ] [ 1.0 ])
   let NN (ifelse-value ((is-number? nbs_discount_units) and (nbs_discount_units > 0))
             [ nbs_discount_units ] [ 1e30 ])
   let phi min (list (n-N / NN) 1)

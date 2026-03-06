@@ -70,7 +70,7 @@ def compute_counts_for_selection(blocks, block_options: List[List[Options]], sel
                 trees = load_cap
         total_res_area += res_area
         total_trees += trees
-    n_res_units = int(total_res_area // max(1e-9, params.res_cell_area))
+    n_res_units = int(total_res_area // max(1e-9, params.res_unit_area))
     return n_res_units, total_trees, total_res_area
 
 
@@ -81,10 +81,12 @@ def write_points_with_counts(out_path: str, points: Sequence[Tuple[float, float]
         f.write('cost,co2,n_blocks,n_res_units,n_trees,cost_discounted\n')
         for (c, z), cnt in zip(points, counts):
             nru, nt = cnt[0], cnt[1]
-            res_area = cnt[2] if len(cnt) > 2 else nru * (params.res_cell_area if params else 1.0)
+            res_area = cnt[2] if len(cnt) > 2 else nru * (params.res_unit_area if params else 1.0)
             if params is not None:
-                rf = discount_factor(params.res_cost_floor, float(nru), float(params.res_discount_units))
-                nf = discount_factor(params.nbs_cost_floor, float(nt),  float(params.nbs_discount_units))
+                kwp_per_m2 = params.res_kwp_per_unit / params.res_unit_area if params.res_unit_area > 0 else 0.0
+                total_kw = res_area * kwp_per_m2
+                rf = discount_factor(params.res_cost_discount, total_kw, float(params.res_discount_kw))
+                nf = discount_factor(params.nbs_cost_discount, float(nt),  float(params.nbs_discount_units))
                 # Use continuous res_area for cost base (consistent with per-block table)
                 c_res_base = res_area * params.cost_res
                 c_nbs_base = nt * params.cost_nbs
@@ -149,25 +151,27 @@ def write_table_csv(path: str, blocks, block_options: List[List[Options]], selec
         sum_res_co2 += res_co2
         sum_nbs_cost_base += nbs_cost0
         sum_res_cost_base += res_cost0
-        total_res_units += int(res_area // max(1e-9, params.res_cell_area))
+        total_res_units += int(res_area // max(1e-9, params.res_unit_area))
         sum_total_co2 += total_co2
         res_pct_sum += (res_pct * 100.0)
         nbs_pct_sum += (nbs_pct * 100.0)
         rows.append((b.get('block'), area, res_pct, nbs_pct, trees, res_area, nbs_co2, nbs_cost0, res_co2, res_cost0, total_co2))
 
-    # Portfolio-level discount factors
-    res_factor = discount_factor(params.res_cost_floor, float(total_res_units), float(params.res_discount_units))
-    nbs_factor = discount_factor(params.nbs_cost_floor, float(sum_trees), float(params.nbs_discount_units))
+    # Portfolio-level discount factors (RES threshold in kW)
+    kwp_per_m2 = params.res_kwp_per_unit / params.res_unit_area if params.res_unit_area > 0 else 0.0
+    sum_res_kw = sum_res_area * kwp_per_m2
+    res_factor = discount_factor(params.res_cost_discount, sum_res_kw, float(params.res_discount_kw))
+    nbs_factor = discount_factor(params.nbs_cost_discount, float(sum_trees), float(params.nbs_discount_units))
 
     with open(path, 'w') as f:
-        f.write('ID, Area_m2, RES%, NBS%, # Trees, RES_m2, NBS_CO2_kg, NBS_Cost_€, RES_CO2_kg, RES_Cost_€, Total_CO2_kg, Total_Cost_€\n')
+        f.write('ID, Area_m2, RES%, NBS%, # Trees, RES_kw, NBS_CO2_kg, NBS_Cost_€, RES_CO2_kg, RES_Cost_€, Total_CO2_kg, Total_Cost_€\n')
         for (block_key, area, res_pct, nbs_pct, trees, res_area, nbs_co2, nbs_cost0, res_co2, res_cost0, total_co2) in rows:
             disc_nbs_cost = nbs_cost0 * nbs_factor
             disc_res_cost = res_cost0 * res_factor
             disc_total_cost = disc_nbs_cost + disc_res_cost
             f.write(
                 f"{block_key}, {area:.6f}, {res_pct*100.0:.2f}%, {nbs_pct*100.0:.2f}%, {trees}, "
-                f"{res_area:.2f} m2, {nbs_co2:.2f} kg, {disc_nbs_cost:.2f} €, {res_co2:.2f} kg, {disc_res_cost:.2f} €, {total_co2:.2f} kg, {disc_total_cost:.2f} €\n"
+                f"{res_area * kwp_per_m2:.2f} kWp, {nbs_co2:.2f} kg, {disc_nbs_cost:.2f} €, {res_co2:.2f} kg, {disc_res_cost:.2f} €, {total_co2:.2f} kg, {disc_total_cost:.2f} €\n"
             )
         avg_res_pct = (res_pct_sum / n) if n > 0 else 0.0
         avg_nbs_pct = (nbs_pct_sum / n) if n > 0 else 0.0
@@ -176,7 +180,7 @@ def write_table_csv(path: str, blocks, block_options: List[List[Options]], selec
         disc_total = disc_nbs_total + disc_res_total
         f.write(
             f"TOTAL (discounted), {sum_area:.2f}, {avg_res_pct:.2f}%, {avg_nbs_pct:.2f}%, {int(sum_trees)}, "
-            f"{sum_res_area:.2f} m2, {sum_nbs_co2:.2f} kg, {disc_nbs_total:.2f} €, {sum_res_co2:.2f} kg, {disc_res_total:.2f} €, {sum_total_co2:.2f} kg, {disc_total:.2f} €\n"
+            f"{sum_res_kw:.2f} kWp, {sum_nbs_co2:.2f} kg, {disc_nbs_total:.2f} €, {sum_res_co2:.2f} kg, {disc_res_total:.2f} €, {sum_total_co2:.2f} kg, {disc_total:.2f} €\n"
         )
 
 
@@ -239,11 +243,12 @@ def main() -> None:
     ap.add_argument('--tree-cover-area', type=float, default=5.0)
     ap.add_argument('--tree-weight', type=float, default=400.0)
     ap.add_argument('--max-roof-load', type=float, default=100.0)
-    ap.add_argument('--res-cell-area', type=float, default=5.0)
+    ap.add_argument('--res-unit-area', type=float, default=5.0)
+    ap.add_argument('--res-kwp-per-unit', type=float, default=1.0, help='kWp per PV unit (rated peak capacity)')
     # Economies of scale
-    ap.add_argument('--res-cost-floor', type=float, default=1.0)
-    ap.add_argument('--nbs-cost-floor', type=float, default=1.0)
-    ap.add_argument('--res-discount-units', type=float, default=1e30)
+    ap.add_argument('--res-cost-discount', type=float, default=1.0)
+    ap.add_argument('--nbs-cost-discount', type=float, default=1.0)
+    ap.add_argument('--res-discount-kw', type=float, default=1e30, help='kW installed at which max RES discount is reached')
     ap.add_argument('--nbs-discount-units', type=float, default=1e30)
 
     ap.add_argument('--budget-max', type=float, default=None, help='Budget limit in euros (required for max-co2-under-budget or both-constraints)')
@@ -268,10 +273,11 @@ def main() -> None:
         tree_cover_area=args.tree_cover_area,
         tree_weight=args.tree_weight,
         max_roof_load=args.max_roof_load,
-        res_cell_area=args.res_cell_area,
-        res_cost_floor=args.res_cost_floor,
-        nbs_cost_floor=args.nbs_cost_floor,
-        res_discount_units=args.res_discount_units,
+        res_unit_area=args.res_unit_area,
+        res_kwp_per_unit=args.res_kwp_per_unit,
+        res_cost_discount=args.res_cost_discount,
+        nbs_cost_discount=args.nbs_cost_discount,
+        res_discount_kw=args.res_discount_kw,
         nbs_discount_units=args.nbs_discount_units,
     )
     print("Params:", params)
@@ -311,7 +317,7 @@ def main() -> None:
             if args.table_out:
                 os.makedirs(os.path.dirname(args.table_out), exist_ok=True)
                 with open(args.table_out, 'w') as f:
-                    f.write('ID, Area_m2, RES%, NBS%, # Trees, RES_m2, NBS_CO2_kg, NBS_Cost_€, RES_CO2_kg, RES_Cost_€, Total_CO2_kg, Total_Cost_€\n')
+                    f.write('ID, Area_m2, RES%, NBS%, # Trees, RES_kw, NBS_CO2_kg, NBS_Cost_€, RES_CO2_kg, RES_Cost_€, Total_CO2_kg, Total_Cost_€\n')
             return
         c_int, z_int, sel = sol
         point = (c_int / scale.cost, z_int / scale.co2)
@@ -343,7 +349,7 @@ def main() -> None:
             if args.table_out:
                 os.makedirs(os.path.dirname(args.table_out), exist_ok=True)
                 with open(args.table_out, 'w') as f:
-                    f.write('ID, Area_m2, RES%, NBS%, # Trees, RES_m2, NBS_CO2_kg, NBS_Cost_€, RES_CO2_kg, RES_Cost_€, Total_CO2_kg, Total_Cost_€\n')
+                    f.write('ID, Area_m2, RES%, NBS%, # Trees, RES_kw, NBS_CO2_kg, NBS_Cost_€, RES_CO2_kg, RES_Cost_€, Total_CO2_kg, Total_Cost_€\n')
             return
         c_int, z_int, sel = sol
         point = (c_int / scale.cost, z_int / scale.co2)
@@ -374,7 +380,7 @@ def main() -> None:
             if args.table_out:
                 os.makedirs(os.path.dirname(args.table_out), exist_ok=True)
                 with open(args.table_out, 'w') as f:
-                    f.write('ID, Area_m2, RES%, NBS%, # Trees, RES_m2, NBS_CO2_kg, NBS_Cost_€, RES_CO2_kg, RES_Cost_€, Total_CO2_kg, Total_Cost_€\n')
+                    f.write('ID, Area_m2, RES%, NBS%, # Trees, RES_kw, NBS_CO2_kg, NBS_Cost_€, RES_CO2_kg, RES_Cost_€, Total_CO2_kg, Total_Cost_€\n')
             return
         c_int, z_int, sel = sol
         point = (c_int / scale.cost, z_int / scale.co2)

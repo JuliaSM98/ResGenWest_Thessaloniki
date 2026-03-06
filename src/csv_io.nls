@@ -39,6 +39,6 @@ to preview-csvs
   print (word " rows: " options-rows)
 
   print "=== Assumptions (from sliders) ==="
-  print (word "RES: cost_€/kWp=" cost_RES ", CO2_kg/(kWp·year)=" co2_reduction_RES ", res_kwp_per_unit=" res_kwp_per_unit ", res_cell_area=" res_cell_area "m2")
+  print (word "RES: cost_€/kWp=" cost_RES ", CO2_kg/(kWp·year)=" co2_reduction_RES ", res_kwp_per_unit=" res_kwp_per_unit ", res_unit_area=" res_unit_area "m2")
   print (word "NBS: cost_€/tree=" cost_NBS ", CO2_kg/tree·year=" co2_reduction_NBS )
 end

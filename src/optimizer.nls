@@ -131,22 +131,23 @@ to run-optimizer-above-co2-and-save [python-exe uncovered-dir options-csv out-cs
   file-print (word "--portfolios-out=" (join-path base "solve_above_co2.json"))
   file-print (word "--selections-out=" (join-path base "solve_above_co2_selections.csv"))
   file-print (word "--table-out=" (join-path base "solve_above_co2_table.csv"))
-  file-print (word "--cost-res=" (ifelse-value (res_cell_area > 0) [ cost_RES * res_kwp_per_unit / res_cell_area ] [ 0 ]))
-  file-print (word "--co2-res=" (ifelse-value (res_cell_area > 0) [ co2_reduction_RES * res_kwp_per_unit / res_cell_area ] [ 0 ]))
+  file-print (word "--cost-res=" (ifelse-value (res_unit_area > 0) [ cost_RES * res_kwp_per_unit / res_unit_area ] [ 0 ]))
+  file-print (word "--co2-res=" (ifelse-value (res_unit_area > 0) [ co2_reduction_RES * res_kwp_per_unit / res_unit_area ] [ 0 ]))
   file-print (word "--cost-nbs=" cost_NBS)
   file-print (word "--co2-nbs=" co2_reduction_NBS)
   file-print (word "--pct-covered-by-NBS-RES=" pct_covered_by_NBS_RES)
   file-print (word "--pct-covered-roof=" pct_covered_roof)
   file-print (word "--pct-covered-ground=" pct_covered_ground)
   file-print (word "--tree-cover-area=" tree_cover_area)
-  if is-number? res_cell_area [ file-print (word "--res-cell-area=" res_cell_area) ]
+  if is-number? res_unit_area [ file-print (word "--res-unit-area=" res_unit_area) ]
+  if is-number? res_kwp_per_unit [ file-print (word "--res-kwp-per-unit=" res_kwp_per_unit) ]
   if is-number? tree_weight [ file-print (word "--tree-weight=" tree_weight) ]
   if is-number? max_roof_load [ file-print (word "--max-roof-load=" max_roof_load) ]
   file-print (word "--max-pct-res=" max_pct_RES)
   file-print (word "--max-pct-nbs=" max_pct_NBS)
-  if is-number? res_cost_floor    [ file-print (word "--res-cost-floor="    res_cost_floor) ]
-  if is-number? nbs_cost_floor    [ file-print (word "--nbs-cost-floor="    nbs_cost_floor) ]
-  if is-number? res_discount_units [ file-print (word "--res-discount-units=" res_discount_units) ]
+  if is-number? res_cost_discount    [ file-print (word "--res-cost-discount="    res_cost_discount) ]
+  if is-number? nbs_cost_discount    [ file-print (word "--nbs-cost-discount="    nbs_cost_discount) ]
+  if is-number? res_discount_kw [ file-print (word "--res-discount-kw=" res_discount_kw) ]
   if is-number? nbs_discount_units [ file-print (word "--nbs-discount-units=" nbs_discount_units) ]
   file-close
   let cmd "scripts/run_optimizer.sh"
@@ -190,20 +191,21 @@ to run-optimizer-both-constraints [python-exe uncovered-dir options-csv out-csv]
   file-print (word "--portfolios-out=" (join-path base "solve_both_constraints.json"))
   file-print (word "--selections-out=" (join-path base "solve_both_constraints_selections.csv"))
   file-print (word "--table-out=" (join-path base "solve_both_constraints_table.csv"))
-  file-print (word "--cost-res=" (ifelse-value (res_cell_area > 0) [ cost_RES * res_kwp_per_unit / res_cell_area ] [ 0 ]))
-  file-print (word "--co2-res=" (ifelse-value (res_cell_area > 0) [ co2_reduction_RES * res_kwp_per_unit / res_cell_area ] [ 0 ]))
+  file-print (word "--cost-res=" (ifelse-value (res_unit_area > 0) [ cost_RES * res_kwp_per_unit / res_unit_area ] [ 0 ]))
+  file-print (word "--co2-res=" (ifelse-value (res_unit_area > 0) [ co2_reduction_RES * res_kwp_per_unit / res_unit_area ] [ 0 ]))
   file-print (word "--cost-nbs=" cost_NBS)
   file-print (word "--co2-nbs=" co2_reduction_NBS)
   file-print (word "--pct-covered-by-NBS-RES=" pct_covered_by_NBS_RES)
   file-print (word "--pct-covered-roof=" pct_covered_roof)
   file-print (word "--pct-covered-ground=" pct_covered_ground)
   file-print (word "--tree-cover-area=" tree_cover_area)
-  if is-number? res_cell_area [ file-print (word "--res-cell-area=" res_cell_area) ]
+  if is-number? res_unit_area [ file-print (word "--res-unit-area=" res_unit_area) ]
+  if is-number? res_kwp_per_unit [ file-print (word "--res-kwp-per-unit=" res_kwp_per_unit) ]
   file-print (word "--max-pct-res=" max_pct_RES)
   file-print (word "--max-pct-nbs=" max_pct_NBS)
-  if is-number? res_cost_floor    [ file-print (word "--res-cost-floor="    res_cost_floor) ]
-  if is-number? nbs_cost_floor    [ file-print (word "--nbs-cost-floor="    nbs_cost_floor) ]
-  if is-number? res_discount_units [ file-print (word "--res-discount-units=" res_discount_units) ]
+  if is-number? res_cost_discount    [ file-print (word "--res-cost-discount="    res_cost_discount) ]
+  if is-number? nbs_cost_discount    [ file-print (word "--nbs-cost-discount="    nbs_cost_discount) ]
+  if is-number? res_discount_kw [ file-print (word "--res-discount-kw=" res_discount_kw) ]
   if is-number? nbs_discount_units [ file-print (word "--nbs-discount-units=" nbs_discount_units) ]
   file-close
   let cmd "scripts/run_optimizer.sh"
@@ -243,22 +245,23 @@ to write-optimizer-budget-args [path uncovered-dir options-csv out-csv budget_ma
   ;; write detailed table CSV for the chosen solution
   file-print (word "--table-out=" (join-path base "solve_under_budget_table.csv"))
   if is-number? budget_max_value [ file-print (word "--budget-max=" budget_max_value) ]
-  file-print (word "--cost-res=" (ifelse-value (res_cell_area > 0) [ cost_RES * res_kwp_per_unit / res_cell_area ] [ 0 ]))
-  file-print (word "--co2-res=" (ifelse-value (res_cell_area > 0) [ co2_reduction_RES * res_kwp_per_unit / res_cell_area ] [ 0 ]))
+  file-print (word "--cost-res=" (ifelse-value (res_unit_area > 0) [ cost_RES * res_kwp_per_unit / res_unit_area ] [ 0 ]))
+  file-print (word "--co2-res=" (ifelse-value (res_unit_area > 0) [ co2_reduction_RES * res_kwp_per_unit / res_unit_area ] [ 0 ]))
   file-print (word "--cost-nbs=" cost_NBS)
   file-print (word "--co2-nbs=" co2_reduction_NBS)
   file-print (word "--pct-covered-by-NBS-RES=" pct_covered_by_NBS_RES)
   file-print (word "--pct-covered-roof=" pct_covered_roof)
   file-print (word "--pct-covered-ground=" pct_covered_ground)
   file-print (word "--tree-cover-area=" tree_cover_area)
-  if is-number? res_cell_area [ file-print (word "--res-cell-area=" res_cell_area) ]
+  if is-number? res_unit_area [ file-print (word "--res-unit-area=" res_unit_area) ]
+  if is-number? res_kwp_per_unit [ file-print (word "--res-kwp-per-unit=" res_kwp_per_unit) ]
   if is-number? tree_weight [ file-print (word "--tree-weight=" tree_weight) ]
   if is-number? max_roof_load [ file-print (word "--max-roof-load=" max_roof_load) ]
   file-print (word "--max-pct-res=" max_pct_RES)
   file-print (word "--max-pct-nbs=" max_pct_NBS)
-  if is-number? res_cost_floor    [ file-print (word "--res-cost-floor="    res_cost_floor) ]
-  if is-number? nbs_cost_floor    [ file-print (word "--nbs-cost-floor="    nbs_cost_floor) ]
-  if is-number? res_discount_units [ file-print (word "--res-discount-units=" res_discount_units) ]
+  if is-number? res_cost_discount    [ file-print (word "--res-cost-discount="    res_cost_discount) ]
+  if is-number? nbs_cost_discount    [ file-print (word "--nbs-cost-discount="    nbs_cost_discount) ]
+  if is-number? res_discount_kw [ file-print (word "--res-discount-kw=" res_discount_kw) ]
   if is-number? nbs_discount_units [ file-print (word "--nbs-discount-units=" nbs_discount_units) ]
   file-close
 end
@@ -332,22 +335,23 @@ to write-optimizer-args [path uncovered-dir options-csv budget-mode budget-steps
              [ ifelse-value (is-number? budget-steps) [ budget-steps ] [ 0 ] ])
   ;; bs = 0 means auto-compute in Python (omit the flag)
   if bs > 0 [ file-print (word "--budget-steps=" bs) ]
-  file-print (word "--cost-res=" (ifelse-value (res_cell_area > 0) [ cost_RES * res_kwp_per_unit / res_cell_area ] [ 0 ]))
-  file-print (word "--co2-res=" (ifelse-value (res_cell_area > 0) [ co2_reduction_RES * res_kwp_per_unit / res_cell_area ] [ 0 ]))
+  file-print (word "--cost-res=" (ifelse-value (res_unit_area > 0) [ cost_RES * res_kwp_per_unit / res_unit_area ] [ 0 ]))
+  file-print (word "--co2-res=" (ifelse-value (res_unit_area > 0) [ co2_reduction_RES * res_kwp_per_unit / res_unit_area ] [ 0 ]))
   file-print (word "--cost-nbs=" cost_NBS)
   file-print (word "--co2-nbs=" co2_reduction_NBS)
   file-print (word "--pct-covered-by-NBS-RES=" pct_covered_by_NBS_RES)
   file-print (word "--pct-covered-roof=" pct_covered_roof)
   file-print (word "--pct-covered-ground=" pct_covered_ground)
   file-print (word "--tree-cover-area=" tree_cover_area)
-  if is-number? res_cell_area [ file-print (word "--res-cell-area=" res_cell_area) ]
+  if is-number? res_unit_area [ file-print (word "--res-unit-area=" res_unit_area) ]
+  if is-number? res_kwp_per_unit [ file-print (word "--res-kwp-per-unit=" res_kwp_per_unit) ]
   if is-number? tree_weight [ file-print (word "--tree-weight=" tree_weight) ]
   if is-number? max_roof_load [ file-print (word "--max-roof-load=" max_roof_load) ]
   file-print (word "--max-pct-res=" max_pct_RES)
   file-print (word "--max-pct-nbs=" max_pct_NBS)
-  if is-number? res_cost_floor    [ file-print (word "--res-cost-floor="    res_cost_floor) ]
-  if is-number? nbs_cost_floor    [ file-print (word "--nbs-cost-floor="    nbs_cost_floor) ]
-  if is-number? res_discount_units [ file-print (word "--res-discount-units=" res_discount_units) ]
+  if is-number? res_cost_discount    [ file-print (word "--res-cost-discount="    res_cost_discount) ]
+  if is-number? nbs_cost_discount    [ file-print (word "--nbs-cost-discount="    nbs_cost_discount) ]
+  if is-number? res_discount_kw [ file-print (word "--res-discount-kw=" res_discount_kw) ]
   if is-number? nbs_discount_units [ file-print (word "--nbs-discount-units=" nbs_discount_units) ]
   file-close
 end
