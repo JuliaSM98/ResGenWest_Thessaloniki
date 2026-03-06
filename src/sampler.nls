@@ -73,7 +73,9 @@ to-report compute-portfolio-totals [portfolio]
 
     ;; RES contributions (per m2) — coverage depends on cell type (roof vs ground)
     let cov (coverage-of-type ctyp)
-    let res_area (area * cov * res)
+    let raw_res_area (area * cov * res)
+    let n_pv (ifelse-value (res_unit_area > 0) [ floor (raw_res_area / res_unit_area) ] [ 0 ])
+    let res_area (n_pv * res_unit_area)
     let resI intensity-of "RES"      ;; [cost_per_m2 co2_per_m2]
     let res_co2_m2  item 1 resI
     let res_co2_total  (res_area * res_co2_m2)
@@ -93,7 +95,7 @@ to-report compute-portfolio-totals [portfolio]
     let nbs_co2_total  (trees * co2_reduction_NBS)
 
     set total-res-area total-res-area + res_area
-    if (res_unit_area > 0) [ set total-res-units total-res-units + floor (res_area / res_unit_area) ]
+    set total-res-units total-res-units + n_pv
     set total-trees    total-trees    + trees
     set total-co2      total-co2      + res_co2_total + nbs_co2_total
   ]
@@ -166,7 +168,9 @@ to-report res-area-of [bid]
   let m mix-for bid
   if m = nobody [ report 0 ]
   let ctyp celltype-of bid
-  report (area-of bid) * (coverage-of-type ctyp) * (item 0 m)
+  let raw_res_area (area-of bid) * (coverage-of-type ctyp) * (item 0 m)
+  let n_pv (ifelse-value (res_unit_area > 0) [ floor (raw_res_area / res_unit_area) ] [ 0 ])
+  report (n_pv * res_unit_area)
 end
 
 to-report trees-of [bid]
@@ -210,7 +214,9 @@ to-report total-res-area-current
       let ctyp celltype-of bid
       let res  item 0 m
       let cov (coverage-of-type ctyp)
-      set total total + (area * cov * res)
+      let raw_res_area (area * cov * res)
+      let n_pv_t (ifelse-value (res_unit_area > 0) [ floor (raw_res_area / res_unit_area) ] [ 0 ])
+      set total total + (n_pv_t * res_unit_area)
     ]
   ]
   report total
@@ -295,7 +301,9 @@ to-report cost-of [bid]
   let nbs  item 1 m
   let cov (coverage-of-type ctyp)
   ;; RES
-  let res_area (area * cov * res)
+  let raw_res_area (area * cov * res)
+  let n_pv_c (ifelse-value (res_unit_area > 0) [ floor (raw_res_area / res_unit_area) ] [ 0 ])
+  let res_area (n_pv_c * res_unit_area)
   let resI intensity-of "RES"      ;; [cost_per_m2 co2_per_m2]
   let res_cost_m2 item 0 resI
   let res_cost (res_area * res_cost_m2)
@@ -324,7 +332,9 @@ to-report co2-of [bid]
   let nbs  item 1 m
   let cov (coverage-of-type ctyp)
   ;; RES
-  let res_area (area * cov * res)
+  let raw_res_area (area * cov * res)
+  let n_pv_z (ifelse-value (res_unit_area > 0) [ floor (raw_res_area / res_unit_area) ] [ 0 ])
+  let res_area (n_pv_z * res_unit_area)
   let resI intensity-of "RES"      ;; [cost_per_m2 co2_per_m2]
   let res_co2_m2 item 1 resI
   let res_co2 (res_area * res_co2_m2)
@@ -415,7 +425,9 @@ to render-current-table [portfolio]
         if trees > load_cap [ set trees load_cap ]
       ]
     ]
-    let res_area (area * cov * res)
+    let raw_res_area (area * cov * res)
+    let n_pv_row (ifelse-value (res_unit_area > 0) [ floor (raw_res_area / res_unit_area) ] [ 0 ])
+    let res_area (n_pv_row * res_unit_area)
     let nbs_co2 (trees * co2_reduction_NBS)
     let nbs_cost0 (trees * cost_NBS)
     let res_co2 (res_area * res_co2_m2)
@@ -429,7 +441,7 @@ to render-current-table [portfolio]
     set sum_res_co2 (sum_res_co2 + res_co2)
     set sum_nbs_cost_base (sum_nbs_cost_base + nbs_cost0)
     set sum_res_cost_base (sum_res_cost_base + res_cost0)
-    if (res_unit_area > 0) [ set sum_res_units (sum_res_units + floor (res_area / res_unit_area)) ]
+    set sum_res_units (sum_res_units + n_pv_row)
     set sum_total_co2 (sum_total_co2 + total_co2)
     let w (area * cov)
     set w_sum (w_sum + w)

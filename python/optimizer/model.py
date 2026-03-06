@@ -45,11 +45,13 @@ def compute_block_option_metrics(area_m2: float, res_pct: float, nbs_pct: float,
     """Return (cost, co2) for a single block given its area and an option.
 
     covered_area = area_m2 * coverage_for_type(p, cell_type)
-    RES area     = covered_area * res_pct
+    RES area     = floor(covered_area * res_pct / res_unit_area) * res_unit_area  → integer PV units
     NBS area     = covered_area * nbs_pct  → integer trees
     """
     cov = coverage_for_type(p, cell_type)
-    res_area = max(0.0, area_m2 * cov * max(0.0, res_pct))
+    raw_res_area = max(0.0, area_m2 * cov * max(0.0, res_pct))
+    pv_units = int(raw_res_area // max(1e-9, p.res_unit_area))
+    res_area = pv_units * p.res_unit_area
     eff_nbs_area = max(0.0, area_m2 * cov * max(0.0, nbs_pct))
     trees = int(eff_nbs_area // max(1e-9, p.tree_cover_area))
     # Roof load cap: trees <= floor(eff_nbs_area * max_roof_load / tree_weight)

@@ -61,7 +61,9 @@ def compute_counts_for_selection(blocks, block_options: List[List[Options]], sel
         res_pct = max(0.0, o.res_pct)
         nbs_pct = max(0.0, o.nbs_pct)
         cov = coverage_for_type(params, cell_type)
-        res_area = area * cov * res_pct
+        raw_res_area = area * cov * res_pct
+        pv_units = int(raw_res_area // max(1e-9, params.res_unit_area))
+        res_area = pv_units * params.res_unit_area
         eff_nbs_area = area * cov * nbs_pct
         trees = int(eff_nbs_area // max(1e-9, params.tree_cover_area))
         if cell_type == 'roof' and params.tree_weight > 0:
@@ -132,7 +134,9 @@ def write_table_csv(path: str, blocks, block_options: List[List[Options]], selec
         res_pct = max(0.0, o.res_pct)
         nbs_pct = max(0.0, o.nbs_pct)
         cov = coverage_for_type(params, cell_type)
-        res_area = area * cov * res_pct
+        raw_res_area = area * cov * res_pct
+        pv_units = int(raw_res_area // max(1e-9, params.res_unit_area))
+        res_area = pv_units * params.res_unit_area
         eff_nbs_area = area * cov * nbs_pct
         trees = int(eff_nbs_area // max(1e-9, params.tree_cover_area))
         if cell_type == 'roof' and params.tree_weight > 0:
@@ -151,7 +155,7 @@ def write_table_csv(path: str, blocks, block_options: List[List[Options]], selec
         sum_res_co2 += res_co2
         sum_nbs_cost_base += nbs_cost0
         sum_res_cost_base += res_cost0
-        total_res_units += int(res_area // max(1e-9, params.res_unit_area))
+        total_res_units += pv_units
         sum_total_co2 += total_co2
         res_pct_sum += (res_pct * 100.0)
         nbs_pct_sum += (nbs_pct * 100.0)
