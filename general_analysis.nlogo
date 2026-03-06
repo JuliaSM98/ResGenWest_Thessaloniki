@@ -86,11 +86,11 @@ to reset-defaults
   set pct_covered_ground     50
   set pct_covered_by_NBS_RES (pct_covered_roof + pct_covered_ground) / 2
   set cost_NBS               600
-  set cost_RES               240
+  set cost_RES               1200
   set co2_reduction_NBS      25
-  set co2_reduction_RES      71
+  set co2_reduction_RES      357
   set print-tables           false
-  set res_kw_per_m2          0.2
+  set res_kwp_per_unit       1.0
   ;; Volume discount (economies of scale)
   set res_cost_floor         0.75
   set nbs_cost_floor         0.50
@@ -259,11 +259,11 @@ SLIDER
 cost_RES
 cost_RES
 0
-1000
-240.0
+2000
+1200.0
+10
 1
-1
-€/m2
+€/kWp
 HORIZONTAL
 
 SLIDER
@@ -312,25 +312,25 @@ pct_covered_ground
 HORIZONTAL
 
 SLIDER
-375
-87
-591
-120
+372
+88
+606
+121
 co2_reduction_RES
 co2_reduction_RES
-0
-100
-71.0
+200
+500
+357.0
 1
 1
-kg/(m2·year)
+kg/(kWp·year)
 HORIZONTAL
 
 SLIDER
-600
-87
-826
-120
+609
+88
+835
+121
 co2_reduction_NBS
 co2_reduction_NBS
 0
@@ -342,10 +342,10 @@ kg/(tree·year)
 HORIZONTAL
 
 SLIDER
-832
-87
-1007
-120
+841
+88
+1016
+121
 tree_cover_area
 tree_cover_area
 1
@@ -357,10 +357,10 @@ m2/tree
 HORIZONTAL
 
 SLIDER
-1011
-87
-1167
-120
+1017
+88
+1180
+121
 res_cell_area
 res_cell_area
 0.5
@@ -368,22 +368,22 @@ res_cell_area
 5.0
 0.5
 1
-m2/cell
+m2/unit
 HORIZONTAL
 
 SLIDER
-1320
-19
-1458
-52
-res_kw_per_m2
-res_kw_per_m2
+1181
+88
+1385
+121
+res_kwp_per_unit
+res_kwp_per_unit
 0
+1.5
+1.0
+0.05
 1
-0.2
-0.01
-1
-kW/m2
+kWp/unit
 HORIZONTAL
 
 SLIDER
@@ -505,7 +505,7 @@ budget-max
 budget-max
 0
 10000000
-1919000.0
+9942000.0
 1000
 1
 €

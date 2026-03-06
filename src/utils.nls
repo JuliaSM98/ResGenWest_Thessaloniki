@@ -45,7 +45,7 @@ to-report discounted-total-cost-res [n-R]
   let NR (ifelse-value ((is-number? res_discount_units) and (res_discount_units > 0))
             [ res_discount_units ] [ 1e30 ])
   let phi min (list (n-R / NR) 1)
-  let cR0 (cost_RES * res_cell_area)  ;; €/unit = €/m2 * m2/unit
+  let cR0 (cost_RES * res_kwp_per_unit)  ;; €/unit = €/kWp * kWp/unit
   report (cR0 * n-R) * (1 - (1 - gR) * phi)
 end
 

@@ -75,10 +75,10 @@ to reset-defaults
   set pct_covered_ground       pct_covered_by_NBS_RES
   set res_cell_area            5
   set cost_NBS               600
-  set cost_RES               240
+  set cost_RES               1200
   set co2_reduction_NBS      25
-  set co2_reduction_RES      71
-  set res_kw_per_m2          0.2
+  set co2_reduction_RES      357
+  set res_kwp_per_unit       1.0
   set outputs_base           "data/outputs/uncovered_spaces"
   set print-tables           false
   ;; Optimizer controls
@@ -195,11 +195,11 @@ SLIDER
 cost_RES
 cost_RES
 0
-1000
-240.0
+2000
+1200.0
+10
 1
-1
-€/m2
+€/kWp
 HORIZONTAL
 
 SLIDER
@@ -209,12 +209,12 @@ SLIDER
 167
 co2_reduction_RES
 co2_reduction_RES
-0
-100
-71.0
+200
+500
+357.0
 1
 1
-kg/(m2·year)
+kg/(kWp·year)
 HORIZONTAL
 
 SLIDER
@@ -408,14 +408,14 @@ SLIDER
 174
 374
 207
-res_kw_per_m2
-res_kw_per_m2
+res_kwp_per_unit
+res_kwp_per_unit
 0
+1.5
+1.0
+0.05
 1
-0.2
-0.01
-1
-kW/m2
+kWp/unit
 HORIZONTAL
 
 TEXTBOX

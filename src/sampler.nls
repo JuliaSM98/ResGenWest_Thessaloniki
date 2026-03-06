@@ -105,7 +105,8 @@ to-report compute-portfolio-totals [portfolio]
   let gN (ifelse-value (is-number? nbs_cost_floor) [ nbs_cost_floor ] [ 1.0 ])
   let NN (ifelse-value ((is-number? nbs_discount_units) and (nbs_discount_units > 0)) [ nbs_discount_units ] [ 1e30 ])
   let phiN min (list (total-trees / NN) 1)
-  let total-cost ((total-res-area * cost_RES * (1 - (1 - gR) * phiR)) + (cost_NBS * total-trees * (1 - (1 - gN) * phiN)))
+  let kwp_m2 (ifelse-value (res_cell_area > 0) [ res_kwp_per_unit / res_cell_area ] [ 0 ])
+  let total-cost ((total-res-area * cost_RES * kwp_m2 * (1 - (1 - gR) * phiR)) + (cost_NBS * total-trees * (1 - (1 - gN) * phiN)))
   report (list total-cost total-co2)
 end
 
@@ -369,7 +370,7 @@ to-report ratio-res-nbs-any [key]
 end
 
 to-report res-kw-of-any [key]
-  report (res-area-of-any key) * res_kw_per_m2
+  report (ifelse-value (res_cell_area > 0) [ (res-area-of-any key) * res_kwp_per_unit / res_cell_area ] [ 0 ])
 end
 
 
