@@ -55,7 +55,7 @@ to setup
     set options-csv-path "data/csv/options.csv"
   ]
   if (not is-string? shapefile-path) or (shapefile-path = "") [
-    set shapefile-path "data/shapefiles/general/one_school_building.shp"
+    set shapefile-path "data/shapefiles/general/social_housing_2.shp"
   ]
   ;; Fix option filters at 100 (all options enabled — no slider in this model)
   set max_pct_RES 100
@@ -82,8 +82,8 @@ to reset-defaults
   set max_roof_load          100
   set max_pct_RES            100
   set max_pct_NBS            100
-  set pct_covered_roof       70
-  set pct_covered_ground     50
+  set pct_covered_roof       100
+  set pct_covered_ground     100
   set pct_covered_by_NBS_RES (pct_covered_roof + pct_covered_ground) / 2
   set cost_NBS               600
   set cost_RES               1200
@@ -94,14 +94,14 @@ to reset-defaults
   ;; Volume discount (economies of scale)
   set res_cost_discount         0.75
   set nbs_cost_discount         0.50
-  set res_discount_kw     100
-  set nbs_discount_units     100
+  set res_discount_kw     600
+  set nbs_discount_units     600
   ;; Optimizer controls
   set budget-max            10000000
   set co2-min               0
   ;; Paths
   set options-csv-path       "data/csv/options.csv"
-  set shapefile-path         "data/shapefiles/general/one_school_building.shp"
+  set shapefile-path         "data/shapefiles/general/social_housing_2.shp"
   set outputs_base           "data/outputs/general"
 end
 
@@ -465,7 +465,7 @@ res_discount_kw
 res_discount_kw
 1
 2000
-667.0
+600.0
 1
 1
 kW threshold
@@ -480,7 +480,7 @@ nbs_discount_units
 nbs_discount_units
 1
 2000
-614.0
+600.0
 1
 1
 Tree units threshold

@@ -454,8 +454,8 @@ to export-solution-csv [path]
   let disc_total    (disc_nbs_cost + disc_res_cost)
   let sum_total_co2 (sum_nbs_co2 + sum_res_co2)
   let sum_res_kw (sum_res_area * kwp_m2)
-  ;; Reset file at the start of each run (ticks <= 1 means setup just ran)
-  if (ticks <= 1) [ carefully [ file-delete path ] [] ]
+  ;; Reset file at the start of each run (ticks = 0 means first iteration)
+  if (ticks = 0) [ carefully [ file-delete path ] [] ]
   let write-header? (not file-exists? path)
   file-open path
   if write-header? [
@@ -605,5 +605,4 @@ to render-current-table [portfolio]
                      (precision disc-total-cost 2) " €")
   output-print ""
   output-print (word "Tick: " ticks "  Cost: " last-total-cost "  CO2: " last-total-co2)
-  export-solution-csv (join-path outputs-base-dir "netlogo_solution.csv")
 end

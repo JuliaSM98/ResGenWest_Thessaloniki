@@ -112,3 +112,24 @@ def frontier_by_budget_steps(block_opts: Sequence[Sequence[IntPoint]], min_budge
             seen.add((c, z))
             out.append((c, z, sel))
     return out
+
+
+def frontier_epsilon_constraint(block_opts: Sequence[Sequence[IntPoint]], max_budget: int):
+    """Find ALL Pareto-optimal points using iterative epsilon-constraint.
+
+    Algorithm: start at max_budget, maximize CO2 → record point →
+    set budget = found_cost - 1 → repeat until infeasible.
+    Guaranteed to find every Pareto-optimal (cost, co2) point.
+    Number of solver calls = number of Pareto points + 1.
+    """
+    out: List[Tuple[int, int, List[int]]] = []
+    budget = max_budget
+    while budget >= 0:
+        res = solve_max_co2_under_budget(block_opts, budget)
+        if res is None:
+            break
+        c, z, sel = res
+        out.append((c, z, sel))
+        budget = c - 1  # tighten: next solution must be strictly cheaper
+    out.reverse()  # return sorted by ascending cost
+    return out

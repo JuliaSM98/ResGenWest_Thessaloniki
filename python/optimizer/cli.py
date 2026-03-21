@@ -10,6 +10,7 @@ from .ortools_solver import (
     Scale,
     scale_points,
     frontier_by_budget_steps,
+    frontier_epsilon_constraint,
     solve_max_co2_under_budget,
     solve_min_cost_above_co2,
     solve_both_constraints,
@@ -362,14 +363,37 @@ def main() -> None:
     if args.mode == 'max-co2-under-budget':
         if args.budget_max is None:
             raise SystemExit('--budget-max is required for mode=max-co2-under-budget')
-        budget_int = int(round(args.budget_max * scale.cost))
-        print("Budget int", budget_int)
-        sol = solve_max_co2_under_budget(int_block_opts, budget_int)
-        print ("Solution", sol)
-        if sol is None:
-            # No feasible solution
+        # The user's budget_max is a discounted-cost limit (what they see on the
+        # Pareto plot).  The solver uses undiscounted per-block costs, so we must
+        # inflate the budget to avoid rejecting solutions that are within budget
+        # after the EoS discount.  We then iterate downward until the discounted
+        # cost actually fits.
+        min_floor = min(params.res_cost_discount, params.nbs_cost_discount)
+        if min_floor <= 0:
+            min_floor = 1.0
+        inflated_budget = args.budget_max / min_floor
+        budget_int = int(round(inflated_budget * scale.cost))
+        print(f"Budget (discounted limit): {args.budget_max}  solver budget (undiscounted): {inflated_budget:.2f}")
+        best = None
+        while budget_int >= 0:
+            sol = solve_max_co2_under_budget(int_block_opts, budget_int)
+            if sol is None:
+                break
+            c_int, z_int, sel = sol
+            # Compute actual discounted cost for this selection
+            cnt = compute_counts_for_selection(blocks, block_opt_refs, sel, params)
+            nru, nt, res_area = cnt
+            kwp_m2 = params.res_kwp_per_unit / params.res_unit_area if params.res_unit_area > 0 else 0.0
+            rf = discount_factor(params.res_cost_discount, res_area * kwp_m2, float(params.res_discount_kw))
+            nf = discount_factor(params.nbs_cost_discount, float(nt), float(params.nbs_discount_units))
+            disc_cost = res_area * params.cost_res * rf + nt * params.cost_nbs * nf
+            if disc_cost <= args.budget_max + 0.01:
+                best = (sel, disc_cost, z_int / scale.co2)
+                break
+            # Discounted cost still over budget — tighten undiscounted limit
+            budget_int = c_int - 1
+        if best is None:
             write_csv(args.out, [], n_blocks=len(blocks))
-            # Overwrite selections/table outputs to avoid stale data
             if args.selections_out:
                 os.makedirs(os.path.dirname(args.selections_out), exist_ok=True)
                 with open(args.selections_out, 'w') as f:
@@ -379,8 +403,9 @@ def main() -> None:
                 with open(args.table_out, 'w') as f:
                     f.write('ID, Area_m2, RES%, NBS%, # Trees, RES_kw, NBS_CO2_kg, NBS_Cost_€, RES_CO2_kg, RES_Cost_€, Total_CO2_kg, Total_Cost_€\n')
             return
-        c_int, z_int, sel = sol
-        point = (c_int / scale.cost, z_int / scale.co2)
+        sel, disc_cost, co2_val = best
+        point = (disc_cost, co2_val)
+        print(f"Solution: discounted cost={disc_cost:.2f}, co2={co2_val:.2f}")
         write_single_solution_outputs(
             args=args,
             blocks=blocks,
@@ -399,7 +424,7 @@ def main() -> None:
         co2_int = int(round(args.co2_min * scale.co2))
         print("CO2 int", co2_int)
         sol = solve_min_cost_above_co2(int_block_opts, co2_int)
-        print ("Solution", sol)
+        print("Solution", sol)
         if sol is None:
             write_csv(args.out, [], n_blocks=len(blocks))
             if args.selections_out:
@@ -428,10 +453,30 @@ def main() -> None:
     if args.mode == 'both-constraints':
         if args.budget_max is None or args.co2_min is None:
             raise SystemExit('--budget-max and --co2-min are required for mode=both-constraints')
-        budget_int = int(round(args.budget_max * scale.cost))
+        # Same inflation logic as max-co2-under-budget
+        min_floor = min(params.res_cost_discount, params.nbs_cost_discount)
+        if min_floor <= 0:
+            min_floor = 1.0
+        inflated_budget = args.budget_max / min_floor
+        budget_int = int(round(inflated_budget * scale.cost))
         co2_int = int(round(args.co2_min * scale.co2))
-        sol = solve_both_constraints(int_block_opts, budget_int, co2_int)
-        if sol is None:
+        best = None
+        while budget_int >= 0:
+            sol = solve_both_constraints(int_block_opts, budget_int, co2_int)
+            if sol is None:
+                break
+            c_int, z_int, sel = sol
+            cnt = compute_counts_for_selection(blocks, block_opt_refs, sel, params)
+            nru, nt, res_area = cnt
+            kwp_m2 = params.res_kwp_per_unit / params.res_unit_area if params.res_unit_area > 0 else 0.0
+            rf = discount_factor(params.res_cost_discount, res_area * kwp_m2, float(params.res_discount_kw))
+            nf = discount_factor(params.nbs_cost_discount, float(nt), float(params.nbs_discount_units))
+            disc_cost = res_area * params.cost_res * rf + nt * params.cost_nbs * nf
+            if disc_cost <= args.budget_max + 0.01:
+                best = (sel, disc_cost, z_int / scale.co2)
+                break
+            budget_int = c_int - 1
+        if best is None:
             write_csv(args.out, [], n_blocks=len(blocks))
             if args.selections_out:
                 os.makedirs(os.path.dirname(args.selections_out), exist_ok=True)
@@ -442,8 +487,9 @@ def main() -> None:
                 with open(args.table_out, 'w') as f:
                     f.write('ID, Area_m2, RES%, NBS%, # Trees, RES_kw, NBS_CO2_kg, NBS_Cost_€, RES_CO2_kg, RES_Cost_€, Total_CO2_kg, Total_Cost_€\n')
             return
-        c_int, z_int, sel = sol
-        point = (c_int / scale.cost, z_int / scale.co2)
+        sel, disc_cost, co2_val = best
+        point = (disc_cost, co2_val)
+        print(f"Solution: discounted cost={disc_cost:.2f}, co2={co2_val:.2f}")
         write_single_solution_outputs(
             args=args,
             blocks=blocks,
@@ -456,34 +502,21 @@ def main() -> None:
         )
         return
 
-    # Default: frontier by uniform budget steps
-    min_budget = sum(min(c for (c, _) in opts) for opts in int_block_opts)
+    # Default: complete Pareto frontier via epsilon-constraint enumeration
     max_budget = sum(max(c for (c, _) in opts) for opts in int_block_opts)
-    # Auto budget steps: 3× total options across all blocks, clamped to [20, 300]
-    if args.budget_steps <= 0:
-        n_options_total = sum(len(opts) for opts in int_block_opts)
-        budget_steps = max(20, min(300, n_options_total * 3))
-        print(f"Auto budget-steps: {budget_steps} (from {n_options_total} total options)")
-    else:
-        budget_steps = args.budget_steps
-    res = frontier_by_budget_steps(
-        int_block_opts,
-        min_budget,
-        max_budget,
-        steps=max(budget_steps, 2),
-    )
+    print("Computing complete Pareto frontier (epsilon-constraint)...")
+    res = frontier_epsilon_constraint(int_block_opts, max_budget)
+    print(f"Found {len(res)} Pareto-optimal points")
     # Convert back to floats and compute unit counts per selection
     points = [(c / scale.cost, z / scale.co2) for (c, z, _sel) in res]
     selections = [sel for (_c, _z, sel) in res]
     counts = [compute_counts_for_selection(blocks, block_opt_refs, sel, params) for sel in selections]
     meta = {
-        'mode': 'frontier-steps',
-        'budget_steps': args.budget_steps,
+        'mode': 'epsilon-constraint',
         'n_blocks': len(blocks),
         'params': params.__dict__,
         'block_options': [[o.__dict__ for o in opts] for opts in block_opt_refs],
         'selections': selections,
-        'min_budget': min_budget / scale.cost,
         'max_budget': max_budget / scale.cost,
         'blocks': blocks,
     }

@@ -51,6 +51,9 @@ to go-core
     render-current-table portfolio
   ]
 
+  ;; Always save the TOTAL row to CSV (independent of print-tables)
+  export-solution-csv (join-path outputs-base-dir "netlogo_solution.csv")
+
   ;; plot single point
   let iter (combo-index + 1)
   ;; Combined Cost & CO2 plot (two pens) — guarded so models without this plot still work
