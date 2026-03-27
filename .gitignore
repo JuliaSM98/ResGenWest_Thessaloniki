@@ -9,3 +9,5 @@ __pycache__/
 
 # Virtual environment
 .venv/
+
+/general_analysis_pack
